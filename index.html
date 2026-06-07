@@ -477,8 +477,8 @@ async function handleLogin() {
     // Verify role matches what user selected
     const snap = await getDoc(doc(db, 'users', cred.user.uid));
     if (snap.exists() && snap.data().role === selectedRole) {
-      // ✅ onAuthStateChanged handles dashboard
-    } else {
+  showDashboard(snap.data());
+} else {
       await signOut(auth);
       showMsg('Jabatan tidak sesuai dengan akun ini.', 'error');
       resetLoginBtn();
