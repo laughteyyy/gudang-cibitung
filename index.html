@@ -537,6 +537,13 @@ function showDashboard(userData) {
 function showLoginScreen() {
   document.getElementById('loginScreen').style.display = 'block';
   document.getElementById('app').style.display = 'none';
+  document.getElementById('nikInput').value = '';
+  document.getElementById('passInput').value = '';
+  document.getElementById('penataHint').classList.remove('show');
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  selectedRole = null;
+  showMsg('', '');
+  resetLoginBtn();
 }
 
 // ── Logout ───────────────────────────────────────────────────
