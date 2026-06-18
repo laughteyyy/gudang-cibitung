@@ -162,6 +162,10 @@
   .role-btn.active[data-role="petugas"] .role-name { color: var(--role-petugas); }
   .role-btn.active[data-role="penata"] { border-color: var(--role-penata); background: rgba(179,136,255,0.05); box-shadow: 0 0 20px rgba(179,136,255,0.08); }
   .role-btn.active[data-role="penata"] .role-name { color: var(--role-penata); }
+  .role-btn.active[data-role="petugas-produksi"] { border-color:#00e5ff; background:rgba(0,229,255,0.05); box-shadow:0 0 20px rgba(0,229,255,0.08); }
+.role-btn.active[data-role="petugas-produksi"] .role-name { color:#00e5ff; }
+.role-btn.active[data-role="penyelia-produksi"] { border-color:#ff9500; background:rgba(255,149,0,0.05); box-shadow:0 0 20px rgba(255,149,0,0.08); }
+.role-btn.active[data-role="penyelia-produksi"] .role-name { color:#ff9500; }
   .divider { height: 1px; background: var(--border); margin-bottom: 28px; }
   .field { margin-bottom: 16px; }
   .field label {
@@ -316,6 +320,14 @@
           <span class="role-icon">📦</span>
           <span class="role-name">Penata</span>
         </button>
+        <button class="role-btn" data-role="petugas-produksi" id="btn-petugas-produksi">
+  <span class="role-icon">🏭</span>
+  <span class="role-name">Ptgs Produksi</span>
+</button>
+<button class="role-btn" data-role="penyelia-produksi" id="btn-penyelia-produksi">
+  <span class="role-icon">👷</span>
+  <span class="role-name">Pnylia Produksi</span>
+</button>
       </div>
 
       <div class="divider"></div>
@@ -410,6 +422,12 @@ const MODULES = {
     { icon:'💡', name:'Saran',      desc:'Kirim saran',           page:'saran.html' },
     { icon:'📦', name:'IOT',        desc:'Lihat notifikasi',      page:'iot.html' },
   ],
+  'petugas-produksi': [
+  { icon:'⚙️', name:'Assembly', desc:'Cek serah terima', page:'assembly.html' },
+],
+'penyelia-produksi': [
+  { icon:'⚙️', name:'Assembly', desc:'Approve produksi', page:'assembly.html' },
+],
 };
 
 const ROLE_COLORS = {
@@ -417,6 +435,8 @@ const ROLE_COLORS = {
   admin:    { color:'#00cfff', bg:'rgba(0,207,255,0.1)' },
   petugas:  { color:'#ff6b35', bg:'rgba(255,107,53,0.1)' },
   penata:   { color:'#b388ff', bg:'rgba(179,136,255,0.1)' },
+  'petugas-produksi':  { color: '#00e5ff', bg: 'rgba(0,229,255,0.1)' },
+'penyelia-produksi': { color: '#ff9500', bg: 'rgba(255,149,0,0.1)' },
 };
 
 // ── State ────────────────────────────────────────────────────
