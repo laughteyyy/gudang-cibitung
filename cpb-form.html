@@ -6,6 +6,7 @@
 <title>CPB Form — GUDANG Cibitung</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg:#0a0a0a; --surface:#111; --surface2:#161616; --surface3:#1c1c1c;
@@ -117,6 +118,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .btn-submit:disabled{opacity:.4;cursor:not-allowed;}
 .btn-approve{width:100%;background:var(--success);color:#000;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
 .btn-approve:hover{box-shadow:0 4px 20px rgba(0,230,118,.2);}
+.btn-export{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-export:hover{box-shadow:0 4px 20px rgba(232,255,0,.2);}
 
 /* ── MSG ── */
 .msg-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
@@ -142,7 +145,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 </head>
 <body>
 
-<!-- TOP NAV -->
 <nav class="topnav">
   <span class="nav-brand">GUDANG</span>
   <span class="nav-sep">|</span>
@@ -150,7 +152,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <a class="nav-back" href="index.html">← Dashboard</a>
 </nav>
 
-<!-- SCREEN: SEARCH -->
 <div class="screen active" id="screenSearch">
   <div class="search-wrap">
     <div class="search-icon">📋</div>
@@ -167,7 +168,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 </div>
 
-<!-- SCREEN: QR SCANNER -->
 <div class="screen" id="screenScanner">
   <div class="scanner-wrap">
     <div class="scanner-title">Scan QR Label</div>
@@ -177,7 +177,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 </div>
 
-<!-- SCREEN: LOADING -->
 <div class="screen" id="screenLoading">
   <div class="loading-wrap">
     <div class="spinner-lg"></div>
@@ -185,9 +184,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 </div>
 
-<!-- SCREEN: FORM -->
 <div class="screen" id="screenForm">
-  <!-- Header -->
   <div class="form-header">
     <div class="wo-badge">
       <div class="wo-number" id="fWoNo">WO-000</div>
@@ -197,10 +194,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="wo-meta" id="fMeta">-</div>
   </div>
 
-  <!-- Status banner -->
   <div id="statusBanner"></div>
 
-  <!-- Sub tabs -->
   <div class="sub-tabs">
     <button class="sub-tab active" data-sec="utuh">
       <span class="tab-progress" id="prog-utuh">0/0</span>
@@ -216,7 +211,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </button>
   </div>
 
-  <!-- Content -->
   <div class="form-content">
     <div id="sec-utuh"></div>
     <div id="sec-koma" style="display:none;"></div>
@@ -224,12 +218,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 </div>
 
-<!-- FOOTER ACTIONS -->
 <div class="form-footer" id="formFooter">
   <div class="footer-inner" id="footerInner"></div>
 </div>
 
-<!-- TOAST -->
 <div class="msg-toast" id="toast"></div>
 
 <script type="module">
@@ -254,10 +246,10 @@ const db   = getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser = null;
-let currentRecord = null;  // CPB record from Firestore
-let currentWODoc = null;   // WO document
-let currentFormula = null; // Formula document
-let recordDocId = null;    // Firestore doc ID for the CPB record
+let currentRecord = null;
+let currentWODoc = null;
+let currentFormula = null;
+let recordDocId = null;
 let currentSection = 'utuh';
 let html5QrScanner = null;
 let hasChanges = false;
@@ -325,7 +317,6 @@ async function loadWO(noWO) {
   setLoadingText('Mencari WO-' + noWO + '...');
 
   try {
-    // 1. Find WO
     const woSnap = await getDocs(query(collection(db,'work_orders'), where('noWO','==',noWO)));
     if (woSnap.empty) {
       showSearchMsg('WO-' + noWO + ' tidak ditemukan. Pastikan admin sudah membuat WO ini.');
@@ -335,7 +326,6 @@ async function loadWO(noWO) {
     const woDoc = woSnap.docs[0];
     currentWODoc = { id: woDoc.id, ...woDoc.data() };
 
-    // 2. Load formula
     setLoadingText('Memuat formula...');
     const fSnap = await getDoc(doc(db,'formulas', currentWODoc.formulaId));
     if (!fSnap.exists()) {
@@ -345,17 +335,14 @@ async function loadWO(noWO) {
     }
     currentFormula = { id: fSnap.id, ...fSnap.data() };
 
-    // 3. Check existing CPB record
     setLoadingText('Memuat data checklist...');
     const recSnap = await getDocs(query(collection(db,'cpb_records'), where('woId','==',currentWODoc.id)));
 
     if (!recSnap.empty) {
-      // Resume existing record
       const recDoc = recSnap.docs[0];
       recordDocId = recDoc.id;
       currentRecord = recDoc.data();
     } else {
-      // Create fresh record structure (not saved yet)
       recordDocId = null;
       currentRecord = buildFreshRecord();
     }
@@ -397,42 +384,34 @@ function renderForm() {
   const role   = currentUser?.role;
   const status = currentRecord.status;
 
-  // Header
   document.getElementById('fWoNo').textContent    = 'WO-' + currentRecord.noWO;
   document.getElementById('fProduct').textContent = currentRecord.namaFormula;
 
   const tgl = currentRecord.tanggal
     ? new Date(currentRecord.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})
     : '-';
-  document.getElementById('fMeta').textContent =
-    tgl + ' · ' + (currentFormula.liniProses || '-');
+  document.getElementById('fMeta').textContent = tgl + ' · ' + (currentFormula.liniProses || '-');
 
-  // Status badge
+  // ALUR BARU
   const statusLabels = {
     pending:           'Menunggu Gudang',
     gudang_progress:   'Sedang Dicek Gudang',
-    gudang_done:       'Menunggu Approval Gudang',
-    gudang_approved:   'Gudang ✓ — Menunggu Produksi',
+    gudang_done:       'Menunggu Cek Produksi',
     produksi_progress: 'Sedang Dicek Produksi',
-    produksi_done:     'Menunggu Approval Produksi',
+    produksi_done:     'Menunggu Apprv. Penyelia Gudang',
+    gudang_approved:   'Menunggu Apprv. Penyelia Produksi',
     selesai:           'Serah Terima Selesai ✅',
   };
+  
   const stEl = document.getElementById('fStatus');
   stEl.textContent = statusLabels[status] || status;
   stEl.className   = 'wo-status st-' + status;
 
-  // Status banner
   renderStatusBanner(role, status);
-
-  // Render sections
   renderSection('utuh');
   renderSection('koma');
   renderSection('premix');
-
-  // Update progress tabs
   updateProgress();
-
-  // Footer
   renderFooter(role, status);
 }
 
@@ -441,11 +420,11 @@ function renderStatusBanner(role, status) {
   banner.innerHTML = '';
   if (status === 'selesai') {
     banner.innerHTML = `<div class="status-banner banner-selesai">✅ Dokumen serah terima telah selesai dan disetujui kedua pihak.</div>`;
-  } else if (status === 'gudang_done' && role !== 'penyelia') {
-    banner.innerHTML = `<div class="status-banner banner-wait-approve">⏳ Menunggu approval Penyelia Gudang.</div>`;
-  } else if (status === 'gudang_approved' && (role === 'penyelia' || role === 'admin')) {
+  } else if (status === 'gudang_done' && role !== 'petugas-produksi') {
     banner.innerHTML = `<div class="status-banner banner-wait-produksi">⏳ Menunggu Petugas Produksi mengisi cek produksi.</div>`;
-  } else if (status === 'produksi_done' && role !== 'penyelia-produksi') {
+  } else if (status === 'produksi_done' && role !== 'penyelia') {
+    banner.innerHTML = `<div class="status-banner banner-wait-approve">⏳ Menunggu approval Penyelia Gudang.</div>`;
+  } else if (status === 'gudang_approved' && role !== 'penyelia-produksi') {
     banner.innerHTML = `<div class="status-banner banner-wait-approve">⏳ Menunggu approval Penyelia Produksi.</div>`;
   }
 }
@@ -454,7 +433,7 @@ function canEditGudang(role, status) {
   return role === 'petugas' && ['pending','gudang_progress'].includes(status);
 }
 function canEditProduksi(role, status) {
-  return role === 'petugas-produksi' && ['gudang_approved','produksi_progress'].includes(status);
+  return role === 'petugas-produksi' && ['gudang_done','produksi_progress'].includes(status);
 }
 
 function renderSection(sec) {
@@ -477,7 +456,7 @@ function renderSection(sec) {
 
     const altsHtml = (row.alts || []).map(alt => {
       const isSelected = (row.selectedAltIds || []).includes(alt.id);
-      const canCheck   = editGudang; // only gudang can select which alt
+      const canCheck   = editGudang;
       return `
         <div class="alt-row">
           <input type="checkbox" class="alt-check" 
@@ -520,7 +499,6 @@ function renderSection(sec) {
       </div>`;
   }).join('');
 
-  // Event listeners
   container.querySelectorAll('.alt-check').forEach(el => {
     el.addEventListener('change', () => {
       const { sec, rowidx, altid } = el.dataset;
@@ -552,9 +530,9 @@ function renderSection(sec) {
 
 // ── PROGRESS ─────────────────────────────────────────────────
 function updateProgress() {
-  const role   = currentUser?.role;
   const status = currentRecord.status;
-  const useGudang = !['gudang_approved','produksi_progress','produksi_done','selesai'].includes(status) || role === 'penyelia' || role === 'admin';
+  // Hitung persentase berdasar stage saat ini
+  const useGudang = ['pending','gudang_progress'].includes(status);
 
   ['utuh','koma','premix'].forEach(sec => {
     const rows   = currentRecord[sec] || [];
@@ -570,198 +548,12 @@ function renderFooter(role, status) {
   const inner     = document.getElementById('footerInner');
   const editG     = canEditGudang(role, status);
   const editP     = canEditProduksi(role, status);
-  const approveG  = role === 'penyelia' && status === 'gudang_done';
-  const approveP  = role === 'penyelia-produksi' && status === 'produksi_done';
+  
+  // URUTAN BARU: Penyelia Gudang approve SETELAH Petugas Produksi submit (produksi_done)
+  const approveG  = role === 'penyelia' && status === 'produksi_done';
+  // Penyelia Produksi approve SETELAH Penyelia Gudang approve (gudang_approved)
+  const approveP  = role === 'penyelia-produksi' && status === 'gudang_approved';
+  
+  const showPdf   = status === 'selesai';
 
-  if (!editG && !editP && !approveG && !approveP) {
-    footer.classList.remove('show');
-    return;
-  }
-
-  footer.classList.add('show');
-
-  if (editG || editP) {
-    const phase = editG ? 'gudang' : 'produksi';
-    inner.innerHTML = `
-      <button class="btn-save" id="btnSave">💾 Simpan</button>
-      <button class="btn-submit" id="btnSubmit">SUBMIT ${phase === 'gudang' ? 'GUDANG' : 'PRODUKSI'}</button>
-    `;
-    document.getElementById('btnSave').addEventListener('click', () => saveProgress(false));
-    document.getElementById('btnSubmit').addEventListener('click', () => saveProgress(true));
-  }
-
-  if (approveG) {
-    inner.innerHTML = `<button class="btn-approve" id="btnApprove">✅ APPROVE CEK GUDANG</button>`;
-    document.getElementById('btnApprove').addEventListener('click', approveGudang);
-  }
-
-  if (approveP) {
-    inner.innerHTML = `<button class="btn-approve" id="btnApprove" style="background:var(--produksi);">✅ APPROVE CEK PRODUKSI</button>`;
-    document.getElementById('btnApprove').addEventListener('click', approveProduksi);
-  }
-}
-
-// ── SAVE PROGRESS ─────────────────────────────────────────────
-async function saveProgress(isSubmit) {
-  const btn = document.getElementById(isSubmit ? 'btnSubmit' : 'btnSave');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>'; }
-
-  const role   = currentUser?.role;
-  const status = currentRecord.status;
-  const editG  = canEditGudang(role, status);
-
-  // Determine new status
-  let newStatus = status;
-  if (isSubmit) {
-    if (editG) {
-      // Check all gudang checked
-      const allChecked = ['utuh','koma','premix'].every(s =>
-        (currentRecord[s] || []).every(r => r.cekGudang)
-      );
-      if (!allChecked) {
-        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
-        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT GUDANG'; }
-        return;
-      }
-      newStatus = 'gudang_done';
-    } else {
-      const allChecked = ['utuh','koma','premix'].every(s =>
-        (currentRecord[s] || []).every(r => r.cekProduksi)
-      );
-      if (!allChecked) {
-        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
-        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT PRODUKSI'; }
-        return;
-      }
-      newStatus = 'produksi_done';
-    }
-  } else {
-    newStatus = editG ? 'gudang_progress' : 'produksi_progress';
-  }
-
-  try {
-    const data = {
-      ...currentRecord,
-      status: newStatus,
-      updatedAt: serverTimestamp(),
-    };
-
-    if (!recordDocId) {
-      // First save — create new document
-      const ref = await addDoc(collection(db,'cpb_records'), data);
-      recordDocId = ref.id;
-    } else {
-      await updateDoc(doc(db,'cpb_records', recordDocId), data);
-    }
-
-    // Also update WO status
-    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: newStatus });
-
-    currentRecord.status = newStatus;
-    hasChanges = false;
-    showToast(isSubmit ? '✅ Submit berhasil! Menunggu approval.' : '💾 Progress tersimpan.', 'success');
-    renderForm();
-
-  } catch(e) {
-    showToast('Gagal menyimpan: ' + e.message, 'error');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = isSubmit ? 'SUBMIT' : '💾 Simpan';
-    }
-  }
-}
-
-// ── APPROVE GUDANG ────────────────────────────────────────────
-async function approveGudang() {
-  const btn = document.getElementById('btnApprove');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-sm"></span>';
-  try {
-    const updateData = {
-      status: 'gudang_approved',
-      gudangApprovedBy: currentUser.name,
-      gudangApprovedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
-    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'gudang_approved' });
-    currentRecord.status = 'gudang_approved';
-    showToast('✅ Cek Gudang disetujui!', 'success');
-    renderForm();
-  } catch(e) {
-    showToast('Gagal approve: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.innerHTML = '✅ APPROVE CEK GUDANG';
-  }
-}
-
-// ── APPROVE PRODUKSI ──────────────────────────────────────────
-async function approveProduksi() {
-  const btn = document.getElementById('btnApprove');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-sm"></span>';
-  try {
-    const updateData = {
-      status: 'selesai',
-      produksiApprovedBy: currentUser.name,
-      produksiApprovedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
-    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'selesai' });
-    currentRecord.status = 'selesai';
-    showToast('🎉 Serah terima selesai!', 'success');
-    renderForm();
-  } catch(e) {
-    showToast('Gagal approve: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.innerHTML = '✅ APPROVE CEK PRODUKSI';
-  }
-}
-
-// ── SUB TABS ─────────────────────────────────────────────────
-document.querySelectorAll('.sub-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentSection = btn.dataset.sec;
-    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    ['utuh','koma','premix'].forEach(s => {
-      document.getElementById('sec-' + s).style.display = s === currentSection ? 'block' : 'none';
-    });
-  });
-});
-
-// ── UTILS ─────────────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function setLoadingText(txt) {
-  document.getElementById('loadingText').textContent = txt;
-}
-
-function showSearchMsg(msg) {
-  const el = document.getElementById('searchMsg');
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 4000);
-}
-
-let toastTimer;
-function showToast(msg, type) {
-  clearTimeout(toastTimer);
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'msg-toast show ' + (type || '');
-  toastTimer = setTimeout(() => el.className = 'msg-toast', 3000);
-}
-
-// Warn before leaving with unsaved changes
-window.addEventListener('beforeunload', e => {
-  if (hasChanges) e.returnValue = 'Ada perubahan yang belum disimpan!';
-});
-</script>
-</body>
-</html>
+  if (!editG &&
