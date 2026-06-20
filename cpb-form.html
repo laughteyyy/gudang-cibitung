@@ -146,9 +146,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .pdf-sec-title {
   display: none;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  color: var(--text);
-  letter-spacing: 2px;
+  font-size: 24px; /* Ukuran dibesarin biar makin jelas */
+  color: var(--accent); /* Warnanya diubah jadi kuning stabilo/neon */
+  letter-spacing: 3px;
   margin: 24px 0 12px;
   padding-bottom: 8px;
   border-bottom: 1px dashed var(--border2);
@@ -162,6 +162,7 @@ body.exporting-pdf .sub-tabs {
 
 body.exporting-pdf #screenForm { 
   padding-top: 16px !important; 
+  background-color: var(--bg) !important; /* Paksa background form jadi gelap total saat di-PDF */
 }
 
 /* Buka semua section agar tercetak di PDF */
