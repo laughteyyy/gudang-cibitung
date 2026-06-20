@@ -556,7 +556,7 @@ function showDashboard(userData) {
     card.addEventListener('click', () => {
       const page = card.dataset.page;
       // Later: window.location.href = page;
-      alert(`Modul "${page.replace('.html','').toUpperCase()}" coming soon! 🚧`);
+      window.location.href = page;
     });
   });
 }
