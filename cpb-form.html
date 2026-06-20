@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CPB Form — GUDANG Cibitung</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+  --bg:#0a0a0a; --surface:#111; --surface2:#161616; --surface3:#1c1c1c;
+  --border:#1e1e1e; --border2:#2a2a2a;
+  --accent:#e8ff00; --accent-dim:rgba(232,255,0,0.08);
+  --text:#f0f0f0; --text2:#aaa; --muted:#555;
+  --error:#ff4444; --success:#00e676; --warn:#ffb300;
+  --gudang:#00cfff; --produksi:#ff6b35;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── TOP NAV ── */
+.topnav{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(10,10,10,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100;}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);}
+.nav-sep{color:var(--border2);}
+.nav-page{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.nav-back{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:5px;}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── SCREENS ── */
+.screen{display:none;padding-top:52px;min-height:100vh;}
+.screen.active{display:block;animation:fadeUp .3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SEARCH SCREEN ── */
+.search-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);padding:24px;}
+.search-icon{font-size:56px;margin-bottom:16px;}
+.search-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:6px;}
+.search-sub{font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center;}
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:380px;}
+.wo-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;text-align:center;outline:none;transition:all .2s;margin-bottom:12px;}
+.wo-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,255,0,0.05);}
+.wo-input::placeholder{color:#333;font-size:16px;letter-spacing:1px;font-family:'DM Sans',sans-serif;}
+.btn-scan{width:100%;background:transparent;border:1px dashed var(--border2);color:var(--muted);border-radius:8px;padding:12px;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-scan:hover{border-color:var(--accent);color:var(--accent);}
+.btn-cari{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;cursor:pointer;transition:all .2s;}
+.btn-cari:hover{box-shadow:0 4px 20px rgba(232,255,0,0.2);}
+.btn-cari:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── QR SCANNER SCREEN ── */
+.scanner-wrap{display:flex;flex-direction:column;align-items:center;padding:24px;min-height:calc(100vh - 52px);}
+.scanner-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:6px;margin-top:16px;}
+.scanner-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+#qr-reader{width:100%;max-width:340px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.btn-cancel-scan{margin-top:16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 24px;font-size:12px;cursor:pointer;transition:all .2s;}
+.btn-cancel-scan:hover{border-color:var(--error);color:var(--error);}
+
+/* ── FORM SCREEN ── */
+.form-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;}
+.wo-badge{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.wo-number{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent);}
+.wo-status{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:4px;text-transform:uppercase;}
+.st-pending{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.2);}
+.st-gudang_progress{background:rgba(0,207,255,.1);color:var(--gudang);border:1px solid rgba(0,207,255,.2);}
+.st-gudang_done{background:rgba(0,207,255,.15);color:var(--gudang);border:1px solid rgba(0,207,255,.3);}
+.st-gudang_approved{background:rgba(0,230,118,.1);color:var(--success);border:1px solid rgba(0,230,118,.2);}
+.st-produksi_progress{background:rgba(255,107,53,.1);color:var(--produksi);border:1px solid rgba(255,107,53,.2);}
+.st-produksi_done{background:rgba(255,107,53,.15);color:var(--produksi);border:1px solid rgba(255,107,53,.3);}
+.st-selesai{background:rgba(232,255,0,.1);color:var(--accent);border:1px solid rgba(232,255,0,.2);}
+.wo-product{font-size:13px;font-weight:600;margin-bottom:2px;}
+.wo-meta{font-size:11px;color:var(--muted);}
+
+/* ── SUB TABS ── */
+.sub-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:90;}
+.sub-tab{flex:1;padding:12px 4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .2s;}
+.sub-tab.active{color:var(--accent);border-color:var(--accent);}
+.tab-progress{display:block;font-size:14px;font-weight:700;margin-bottom:2px;}
+
+/* ── FORM CONTENT ── */
+.form-content{padding:12px 12px 120px;}
+.section-empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;}
+
+/* ── BB ROW ── */
+.bb-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .2s;}
+.bb-card.checked-gudang{border-color:rgba(0,207,255,.3);}
+.bb-card.checked-both{border-color:rgba(0,230,118,.3);}
+.bb-card-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.bb-no-badge{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);min-width:28px;}
+.bb-jumlah{margin-left:auto;text-align:right;}
+.bb-jumlah-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);}
+.bb-jumlah-uom{font-size:10px;color:var(--muted);}
+.bb-alts{padding:10px 14px;}
+.alt-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.alt-row:last-child{border-bottom:none;}
+.alt-check{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.alt-check:disabled{opacity:.3;cursor:not-allowed;}
+.alt-kode{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);min-width:80px;}
+.alt-nama{font-size:13px;color:var(--text2);flex:1;}
+.bb-cek-row{display:flex;gap:8px;padding:10px 14px 12px;background:var(--surface2);}
+.cek-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;}
+.cek-btn:disabled{opacity:.3;cursor:not-allowed;}
+.cek-btn.gudang{color:var(--gudang);}
+.cek-btn.gudang.checked{background:rgba(0,207,255,.1);border-color:var(--gudang);}
+.cek-btn.gudang:not(:disabled):hover{border-color:var(--gudang);}
+.cek-btn.produksi{color:var(--produksi);}
+.cek-btn.produksi.checked{background:rgba(255,107,53,.1);border-color:var(--produksi);}
+.cek-btn.produksi:not(:disabled):hover{border-color:var(--produksi);}
+.check-icon{font-size:14px;}
+
+/* ── FOOTER ACTIONS ── */
+.form-footer{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:12px 16px;display:none;}
+.form-footer.show{display:block;}
+.footer-inner{display:flex;gap:8px;max-width:600px;margin:0 auto;}
+.btn-save{flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-save:hover{border-color:var(--muted);}
+.btn-submit{flex:2;background:var(--accent);color:#000;border:none;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-submit:hover{box-shadow:0 4px 20px rgba(232,255,0,.2);}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.btn-approve{width:100%;background:var(--success);color:#000;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-approve:hover{box-shadow:0 4px 20px rgba(0,230,118,.2);}
+
+/* ── MSG ── */
+.msg-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
+.msg-toast.show{display:block;animation:fadeUp .2s ease both;}
+.msg-toast.success{border-color:rgba(0,230,118,.3);color:var(--success);}
+.msg-toast.error{border-color:rgba(255,68,68,.3);color:var(--error);}
+
+/* ── LOADING ── */
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);gap:12px;}
+.spinner-lg{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted);}
+.spinner-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+
+/* ── STATUS BANNER ── */
+.status-banner{margin:12px;padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.5;}
+.banner-selesai{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);color:var(--success);}
+.banner-wait-approve{background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);color:var(--warn);}
+.banner-wait-produksi{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);color:var(--produksi);}
+
+@media(min-width:600px){.search-wrap{padding:40px;}.form-content{padding:16px 20px 130px;}.bb-card-header{padding:14px 18px;}.bb-alts{padding:12px 18px;}.bb-cek-row{padding:12px 18px 14px;}}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <span class="nav-brand">GUDANG</span>
+  <span class="nav-sep">|</span>
+  <span class="nav-page">CPB Form</span>
+  <a class="nav-back" href="index.html">← Dashboard</a>
+</nav>
+
+<!-- SCREEN: SEARCH -->
+<div class="screen active" id="screenSearch">
+  <div class="search-wrap">
+    <div class="search-icon">📋</div>
+    <div class="search-title">Dokumen CPB</div>
+    <div class="search-sub">Scan QR label pada pallet<br>atau ketik No. WO manual</div>
+    <div class="search-card">
+      <input class="wo-input" type="text" id="woInput" placeholder="Nomor WO..." maxlength="20"/>
+      <button class="btn-scan" id="btnScan">
+        <span>📷</span> Scan QR Label
+      </button>
+      <button class="btn-cari" id="btnCari">BUKA FORM</button>
+      <div class="msg" id="searchMsg" style="margin-top:12px;font-size:12px;color:var(--error);display:none;text-align:center;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: QR SCANNER -->
+<div class="screen" id="screenScanner">
+  <div class="scanner-wrap">
+    <div class="scanner-title">Scan QR Label</div>
+    <div class="scanner-sub">Arahkan kamera ke QR code pada label pallet</div>
+    <div id="qr-reader"></div>
+    <button class="btn-cancel-scan" id="btnCancelScan">✕ Batal</button>
+  </div>
+</div>
+
+<!-- SCREEN: LOADING -->
+<div class="screen" id="screenLoading">
+  <div class="loading-wrap">
+    <div class="spinner-lg"></div>
+    <div class="loading-text" id="loadingText">Mencari WO...</div>
+  </div>
+</div>
+
+<!-- SCREEN: FORM -->
+<div class="screen" id="screenForm">
+  <!-- Header -->
+  <div class="form-header">
+    <div class="wo-badge">
+      <div class="wo-number" id="fWoNo">WO-000</div>
+      <div class="wo-status" id="fStatus">-</div>
+    </div>
+    <div class="wo-product" id="fProduct">-</div>
+    <div class="wo-meta" id="fMeta">-</div>
+  </div>
+
+  <!-- Status banner -->
+  <div id="statusBanner"></div>
+
+  <!-- Sub tabs -->
+  <div class="sub-tabs">
+    <button class="sub-tab active" data-sec="utuh">
+      <span class="tab-progress" id="prog-utuh">0/0</span>
+      A · Utuh
+    </button>
+    <button class="sub-tab" data-sec="koma">
+      <span class="tab-progress" id="prog-koma">0/0</span>
+      B · Koma
+    </button>
+    <button class="sub-tab" data-sec="premix">
+      <span class="tab-progress" id="prog-premix">0/0</span>
+      C · Premix
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="form-content">
+    <div id="sec-utuh"></div>
+    <div id="sec-koma" style="display:none;"></div>
+    <div id="sec-premix" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- FOOTER ACTIONS -->
+<div class="form-footer" id="formFooter">
+  <div class="footer-inner" id="footerInner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="msg-toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }       from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+                               from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, serverTimestamp }
+                               from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBK8eNz6lYGT9dI5b01sCPdRFHBU8_i_40",
+  authDomain:"gudang-cibitung.firebaseapp.com",
+  projectId:"gudang-cibitung",
+  storageBucket:"gudang-cibitung.firebasestorage.app",
+  messagingSenderId:"570827859176",
+  appId:"1:570827859176:web:ccefaeeb0b964bd39dd55d"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ─────────────────────────────────────────────────────
+let currentUser = null;
+let currentRecord = null;  // CPB record from Firestore
+let currentWODoc = null;   // WO document
+let currentFormula = null; // Formula document
+let recordDocId = null;    // Firestore doc ID for the CPB record
+let currentSection = 'utuh';
+let html5QrScanner = null;
+let hasChanges = false;
+
+// ── AUTH GUARD ────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (!snap.exists()) { window.location.href = 'index.html'; return; }
+  currentUser = { uid: user.uid, ...snap.data() };
+});
+
+// ── SEARCH ───────────────────────────────────────────────────
+document.getElementById('btnCari').addEventListener('click', () => {
+  const val = document.getElementById('woInput').value.trim().replace('WO-','').replace('WO','');
+  if (!val) { showSearchMsg('Masukkan nomor WO dulu.'); return; }
+  loadWO(val);
+});
+
+document.getElementById('woInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnCari').click();
+});
+
+// ── QR SCANNER ───────────────────────────────────────────────
+document.getElementById('btnScan').addEventListener('click', () => {
+  showScreen('screenScanner');
+  startScanner();
+});
+
+document.getElementById('btnCancelScan').addEventListener('click', () => {
+  stopScanner();
+  showScreen('screenSearch');
+});
+
+function startScanner() {
+  if (!html5QrScanner) {
+    html5QrScanner = new Html5Qrcode('qr-reader');
+  }
+  html5QrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 240, height: 240 } },
+    (decoded) => {
+      stopScanner();
+      const woNo = decoded.replace('WO-','').trim();
+      document.getElementById('woInput').value = woNo;
+      showScreen('screenSearch');
+      loadWO(woNo);
+    },
+    () => {}
+  ).catch(() => {
+    showSearchMsg('Kamera tidak bisa diakses. Ketik WO manual.');
+    showScreen('screenSearch');
+  });
+}
+
+function stopScanner() {
+  if (html5QrScanner && html5QrScanner.isScanning) {
+    html5QrScanner.stop().catch(() => {});
+  }
+}
+
+// ── LOAD WO ──────────────────────────────────────────────────
+async function loadWO(noWO) {
+  showScreen('screenLoading');
+  setLoadingText('Mencari WO-' + noWO + '...');
+
+  try {
+    // 1. Find WO
+    const woSnap = await getDocs(query(collection(db,'work_orders'), where('noWO','==',noWO)));
+    if (woSnap.empty) {
+      showSearchMsg('WO-' + noWO + ' tidak ditemukan. Pastikan admin sudah membuat WO ini.');
+      showScreen('screenSearch');
+      return;
+    }
+    const woDoc = woSnap.docs[0];
+    currentWODoc = { id: woDoc.id, ...woDoc.data() };
+
+    // 2. Load formula
+    setLoadingText('Memuat formula...');
+    const fSnap = await getDoc(doc(db,'formulas', currentWODoc.formulaId));
+    if (!fSnap.exists()) {
+      showSearchMsg('Formula tidak ditemukan. Hubungi admin.');
+      showScreen('screenSearch');
+      return;
+    }
+    currentFormula = { id: fSnap.id, ...fSnap.data() };
+
+    // 3. Check existing CPB record
+    setLoadingText('Memuat data checklist...');
+    const recSnap = await getDocs(query(collection(db,'cpb_records'), where('woId','==',currentWODoc.id)));
+
+    if (!recSnap.empty) {
+      // Resume existing record
+      const recDoc = recSnap.docs[0];
+      recordDocId = recDoc.id;
+      currentRecord = recDoc.data();
+    } else {
+      // Create fresh record structure (not saved yet)
+      recordDocId = null;
+      currentRecord = buildFreshRecord();
+    }
+
+    renderForm();
+    showScreen('screenForm');
+
+  } catch(e) {
+    showSearchMsg('Gagal memuat: ' + e.message);
+    showScreen('screenSearch');
+  }
+}
+
+function buildFreshRecord() {
+  const buildSection = (items) => (items || []).map(row => ({
+    no: row.no,
+    alts: row.alts || [],
+    selectedAltIds: [],
+    jumlah: row.jumlah || '',
+    uom: row.uom || '',
+    cekGudang: false,
+    cekProduksi: false,
+  }));
+
+  return {
+    woId: currentWODoc.id,
+    noWO: currentWODoc.noWO,
+    namaFormula: currentWODoc.namaFormula,
+    tanggal: currentWODoc.tanggal,
+    status: 'pending',
+    utuh:   buildSection(currentFormula.utuh),
+    koma:   buildSection(currentFormula.koma),
+    premix: buildSection(currentFormula.premix),
+  };
+}
+
+// ── RENDER FORM ───────────────────────────────────────────────
+function renderForm() {
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+
+  // Header
+  document.getElementById('fWoNo').textContent    = 'WO-' + currentRecord.noWO;
+  document.getElementById('fProduct').textContent = currentRecord.namaFormula;
+
+  const tgl = currentRecord.tanggal
+    ? new Date(currentRecord.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})
+    : '-';
+  document.getElementById('fMeta').textContent =
+    tgl + ' · ' + (currentFormula.liniProses || '-');
+
+  // Status badge
+  const statusLabels = {
+    pending:           'Menunggu Gudang',
+    gudang_progress:   'Sedang Dicek Gudang',
+    gudang_done:       'Menunggu Approval Gudang',
+    gudang_approved:   'Gudang ✓ — Menunggu Produksi',
+    produksi_progress: 'Sedang Dicek Produksi',
+    produksi_done:     'Menunggu Approval Produksi',
+    selesai:           'Serah Terima Selesai ✅',
+  };
+  const stEl = document.getElementById('fStatus');
+  stEl.textContent = statusLabels[status] || status;
+  stEl.className   = 'wo-status st-' + status;
+
+  // Status banner
+  renderStatusBanner(role, status);
+
+  // Render sections
+  renderSection('utuh');
+  renderSection('koma');
+  renderSection('premix');
+
+  // Update progress tabs
+  updateProgress();
+
+  // Footer
+  renderFooter(role, status);
+}
+
+function renderStatusBanner(role, status) {
+  const banner = document.getElementById('statusBanner');
+  banner.innerHTML = '';
+  if (status === 'selesai') {
+    banner.innerHTML = `<div class="status-banner banner-selesai">✅ Dokumen serah terima telah selesai dan disetujui kedua pihak.</div>`;
+  } else if (status === 'gudang_done' && role !== 'penyelia') {
+    banner.innerHTML = `<div class="status-banner banner-wait-approve">⏳ Menunggu approval Penyelia Gudang.</div>`;
+  } else if (status === 'gudang_approved' && (role === 'penyelia' || role === 'admin')) {
+    banner.innerHTML = `<div class="status-banner banner-wait-produksi">⏳ Menunggu Petugas Produksi mengisi cek produksi.</div>`;
+  } else if (status === 'produksi_done' && role !== 'penyelia-produksi') {
+    banner.innerHTML = `<div class="status-banner banner-wait-approve">⏳ Menunggu approval Penyelia Produksi.</div>`;
+  }
+}
+
+function canEditGudang(role, status) {
+  return role === 'petugas' && ['pending','gudang_progress'].includes(status);
+}
+function canEditProduksi(role, status) {
+  return role === 'petugas-produksi' && ['gudang_approved','produksi_progress'].includes(status);
+}
+
+function renderSection(sec) {
+  const container = document.getElementById('sec-' + sec);
+  const rows = currentRecord[sec] || [];
+  const role = currentUser?.role;
+  const status = currentRecord.status;
+  const editGudang   = canEditGudang(role, status);
+  const editProduksi = canEditProduksi(role, status);
+
+  if (!rows.length) {
+    container.innerHTML = `<div class="section-empty">Tidak ada bahan baku untuk section ini.</div>`;
+    return;
+  }
+
+  container.innerHTML = rows.map((row, idx) => {
+    const bothChecked  = row.cekGudang && row.cekProduksi;
+    const gudangChecked = row.cekGudang;
+    const cardClass = bothChecked ? 'bb-card checked-both' : gudangChecked ? 'bb-card checked-gudang' : 'bb-card';
+
+    const altsHtml = (row.alts || []).map(alt => {
+      const isSelected = (row.selectedAltIds || []).includes(alt.id);
+      const canCheck   = editGudang; // only gudang can select which alt
+      return `
+        <div class="alt-row">
+          <input type="checkbox" class="alt-check" 
+            ${isSelected ? 'checked' : ''} 
+            ${!canCheck ? 'disabled' : ''}
+            data-sec="${sec}" data-rowIdx="${idx}" data-altid="${alt.id}"
+          />
+          <span class="alt-kode">${alt.kode || '-'}</span>
+          <span class="alt-nama">${alt.nama || '-'}</span>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="${cardClass}" id="card-${sec}-${idx}">
+        <div class="bb-card-header">
+          <div class="bb-no-badge">${row.no}</div>
+          <div style="flex:1;"></div>
+          <div class="bb-jumlah">
+            <div class="bb-jumlah-val">${row.jumlah || '-'}</div>
+            <div class="bb-jumlah-uom">${row.uom || ''}</div>
+          </div>
+        </div>
+        <div class="bb-alts">${altsHtml}</div>
+        <div class="bb-cek-row">
+          <button class="cek-btn gudang ${row.cekGudang ? 'checked' : ''}"
+            ${!editGudang ? 'disabled' : ''}
+            data-sec="${sec}" data-rowidx="${idx}" data-type="gudang"
+          >
+            <span class="check-icon">${row.cekGudang ? '✅' : '☐'}</span>
+            Cek Gudang
+          </button>
+          <button class="cek-btn produksi ${row.cekProduksi ? 'checked' : ''}"
+            ${!editProduksi ? 'disabled' : ''}
+            data-sec="${sec}" data-rowidx="${idx}" data-type="produksi"
+          >
+            <span class="check-icon">${row.cekProduksi ? '✅' : '☐'}</span>
+            Cek Produksi
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Event listeners
+  container.querySelectorAll('.alt-check').forEach(el => {
+    el.addEventListener('change', () => {
+      const { sec, rowidx, altid } = el.dataset;
+      const idx = parseInt(rowidx);
+      const row = currentRecord[sec][idx];
+      if (el.checked) {
+        if (!row.selectedAltIds.includes(altid)) row.selectedAltIds.push(altid);
+      } else {
+        row.selectedAltIds = row.selectedAltIds.filter(id => id !== altid);
+      }
+      hasChanges = true;
+    });
+  });
+
+  container.querySelectorAll('.cek-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sec  = btn.dataset.sec;
+      const idx  = parseInt(btn.dataset.rowidx);
+      const type = btn.dataset.type;
+      const row  = currentRecord[sec][idx];
+      if (type === 'gudang') row.cekGudang = !row.cekGudang;
+      else row.cekProduksi = !row.cekProduksi;
+      hasChanges = true;
+      renderSection(sec);
+      updateProgress();
+    });
+  });
+}
+
+// ── PROGRESS ─────────────────────────────────────────────────
+function updateProgress() {
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+  const useGudang = !['gudang_approved','produksi_progress','produksi_done','selesai'].includes(status) || role === 'penyelia' || role === 'admin';
+
+  ['utuh','koma','premix'].forEach(sec => {
+    const rows   = currentRecord[sec] || [];
+    const total  = rows.length;
+    const done   = rows.filter(r => useGudang ? r.cekGudang : r.cekProduksi).length;
+    document.getElementById('prog-' + sec).textContent = total ? `${done}/${total}` : '-';
+  });
+}
+
+// ── FOOTER ───────────────────────────────────────────────────
+function renderFooter(role, status) {
+  const footer    = document.getElementById('formFooter');
+  const inner     = document.getElementById('footerInner');
+  const editG     = canEditGudang(role, status);
+  const editP     = canEditProduksi(role, status);
+  const approveG  = role === 'penyelia' && status === 'gudang_done';
+  const approveP  = role === 'penyelia-produksi' && status === 'produksi_done';
+
+  if (!editG && !editP && !approveG && !approveP) {
+    footer.classList.remove('show');
+    return;
+  }
+
+  footer.classList.add('show');
+
+  if (editG || editP) {
+    const phase = editG ? 'gudang' : 'produksi';
+    inner.innerHTML = `
+      <button class="btn-save" id="btnSave">💾 Simpan</button>
+      <button class="btn-submit" id="btnSubmit">SUBMIT ${phase === 'gudang' ? 'GUDANG' : 'PRODUKSI'}</button>
+    `;
+    document.getElementById('btnSave').addEventListener('click', () => saveProgress(false));
+    document.getElementById('btnSubmit').addEventListener('click', () => saveProgress(true));
+  }
+
+  if (approveG) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove">✅ APPROVE CEK GUDANG</button>`;
+    document.getElementById('btnApprove').addEventListener('click', approveGudang);
+  }
+
+  if (approveP) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove" style="background:var(--produksi);">✅ APPROVE CEK PRODUKSI</button>`;
+    document.getElementById('btnApprove').addEventListener('click', approveProduksi);
+  }
+}
+
+// ── SAVE PROGRESS ─────────────────────────────────────────────
+async function saveProgress(isSubmit) {
+  const btn = document.getElementById(isSubmit ? 'btnSubmit' : 'btnSave');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>'; }
+
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+  const editG  = canEditGudang(role, status);
+
+  // Determine new status
+  let newStatus = status;
+  if (isSubmit) {
+    if (editG) {
+      // Check all gudang checked
+      const allChecked = ['utuh','koma','premix'].every(s =>
+        (currentRecord[s] || []).every(r => r.cekGudang)
+      );
+      if (!allChecked) {
+        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT GUDANG'; }
+        return;
+      }
+      newStatus = 'gudang_done';
+    } else {
+      const allChecked = ['utuh','koma','premix'].every(s =>
+        (currentRecord[s] || []).every(r => r.cekProduksi)
+      );
+      if (!allChecked) {
+        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT PRODUKSI'; }
+        return;
+      }
+      newStatus = 'produksi_done';
+    }
+  } else {
+    newStatus = editG ? 'gudang_progress' : 'produksi_progress';
+  }
+
+  try {
+    const data = {
+      ...currentRecord,
+      status: newStatus,
+      updatedAt: serverTimestamp(),
+    };
+
+    if (!recordDocId) {
+      // First save — create new document
+      const ref = await addDoc(collection(db,'cpb_records'), data);
+      recordDocId = ref.id;
+    } else {
+      await updateDoc(doc(db,'cpb_records', recordDocId), data);
+    }
+
+    // Also update WO status
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: newStatus });
+
+    currentRecord.status = newStatus;
+    hasChanges = false;
+    showToast(isSubmit ? '✅ Submit berhasil! Menunggu approval.' : '💾 Progress tersimpan.', 'success');
+    renderForm();
+
+  } catch(e) {
+    showToast('Gagal menyimpan: ' + e.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = isSubmit ? 'SUBMIT' : '💾 Simpan';
+    }
+  }
+}
+
+// ── APPROVE GUDANG ────────────────────────────────────────────
+async function approveGudang() {
+  const btn = document.getElementById('btnApprove');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>';
+  try {
+    const updateData = {
+      status: 'gudang_approved',
+      gudangApprovedBy: currentUser.name,
+      gudangApprovedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'gudang_approved' });
+    currentRecord.status = 'gudang_approved';
+    showToast('✅ Cek Gudang disetujui!', 'success');
+    renderForm();
+  } catch(e) {
+    showToast('Gagal approve: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '✅ APPROVE CEK GUDANG';
+  }
+}
+
+// ── APPROVE PRODUKSI ──────────────────────────────────────────
+async function approveProduksi() {
+  const btn = document.getElementById('btnApprove');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>';
+  try {
+    const updateData = {
+      status: 'selesai',
+      produksiApprovedBy: currentUser.name,
+      produksiApprovedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'selesai' });
+    currentRecord.status = 'selesai';
+    showToast('🎉 Serah terima selesai!', 'success');
+    renderForm();
+  } catch(e) {
+    showToast('Gagal approve: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '✅ APPROVE CEK PRODUKSI';
+  }
+}
+
+// ── SUB TABS ─────────────────────────────────────────────────
+document.querySelectorAll('.sub-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSection = btn.dataset.sec;
+    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['utuh','koma','premix'].forEach(s => {
+      document.getElementById('sec-' + s).style.display = s === currentSection ? 'block' : 'none';
+    });
+  });
+});
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setLoadingText(txt) {
+  document.getElementById('loadingText').textContent = txt;
+}
+
+function showSearchMsg(msg) {
+  const el = document.getElementById('searchMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'msg-toast show ' + (type || '');
+  toastTimer = setTimeout(() => el.className = 'msg-toast', 3000);
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', e => {
+  if (hasChanges) e.returnValue = 'Ada perubahan yang belum disimpan!';
+});
+</script>
+</body>
+</html>
