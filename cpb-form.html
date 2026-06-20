@@ -556,4 +556,230 @@ function renderFooter(role, status) {
   
   const showPdf   = status === 'selesai';
 
-  if (!editG &&
+  if (!editG && !editP && !approveG && !approveP && !showPdf) {
+    footer.classList.remove('show');
+    return;
+  }
+
+  footer.classList.add('show');
+
+  if (editG || editP) {
+    const phase = editG ? 'gudang' : 'produksi';
+    inner.innerHTML = `
+      <button class="btn-save" id="btnSave">💾 Simpan</button>
+      <button class="btn-submit" id="btnSubmit">SUBMIT ${phase === 'gudang' ? 'GUDANG' : 'PRODUKSI'}</button>
+    `;
+    document.getElementById('btnSave').addEventListener('click', () => saveProgress(false));
+    document.getElementById('btnSubmit').addEventListener('click', () => saveProgress(true));
+  } else if (approveG) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove">✅ APPROVE CEK GUDANG</button>`;
+    document.getElementById('btnApprove').addEventListener('click', approveGudang);
+  } else if (approveP) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove" style="background:var(--produksi);">✅ APPROVE CEK PRODUKSI</button>`;
+    document.getElementById('btnApprove').addEventListener('click', approveProduksi);
+  } else if (showPdf) {
+    inner.innerHTML = `<button class="btn-export" id="btnExportPdf">📄 EXPORT TO PDF</button>`;
+    document.getElementById('btnExportPdf').addEventListener('click', exportToPdf);
+  }
+}
+
+// ── SAVE PROGRESS ─────────────────────────────────────────────
+async function saveProgress(isSubmit) {
+  const btn = document.getElementById(isSubmit ? 'btnSubmit' : 'btnSave');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>'; }
+
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+  const editG  = canEditGudang(role, status);
+
+  let newStatus = status;
+  if (isSubmit) {
+    if (editG) {
+      const allChecked = ['utuh','koma','premix'].every(s => (currentRecord[s] || []).every(r => r.cekGudang));
+      if (!allChecked) {
+        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT GUDANG'; }
+        return;
+      }
+      newStatus = 'gudang_done';
+    } else {
+      const allChecked = ['utuh','koma','premix'].every(s => (currentRecord[s] || []).every(r => r.cekProduksi));
+      if (!allChecked) {
+        showToast('Centang semua bahan baku dulu sebelum submit.', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = 'SUBMIT PRODUKSI'; }
+        return;
+      }
+      newStatus = 'produksi_done';
+    }
+  } else {
+    newStatus = editG ? 'gudang_progress' : 'produksi_progress';
+  }
+
+  try {
+    const data = { ...currentRecord, status: newStatus, updatedAt: serverTimestamp() };
+
+    if (!recordDocId) {
+      const ref = await addDoc(collection(db,'cpb_records'), data);
+      recordDocId = ref.id;
+    } else {
+      await updateDoc(doc(db,'cpb_records', recordDocId), data);
+    }
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: newStatus });
+
+    currentRecord.status = newStatus;
+    hasChanges = false;
+    showToast(isSubmit ? '✅ Submit berhasil! Menunggu approval.' : '💾 Progress tersimpan.', 'success');
+    renderForm();
+  } catch(e) {
+    showToast('Gagal menyimpan: ' + e.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = isSubmit ? 'SUBMIT' : '💾 Simpan';
+    }
+  }
+}
+
+// ── APPROVE GUDANG ────────────────────────────────────────────
+async function approveGudang() {
+  const btn = document.getElementById('btnApprove');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>';
+  try {
+    const updateData = {
+      status: 'gudang_approved',
+      gudangApprovedBy: currentUser.name,
+      gudangApprovedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'gudang_approved' });
+    currentRecord.status = 'gudang_approved';
+    showToast('✅ Cek Gudang disetujui!', 'success');
+    renderForm();
+  } catch(e) {
+    showToast('Gagal approve: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '✅ APPROVE CEK GUDANG';
+  }
+}
+
+// ── APPROVE PRODUKSI ──────────────────────────────────────────
+async function approveProduksi() {
+  const btn = document.getElementById('btnApprove');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>';
+  try {
+    const updateData = {
+      status: 'selesai',
+      produksiApprovedBy: currentUser.name,
+      produksiApprovedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await updateDoc(doc(db,'cpb_records', recordDocId), updateData);
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: 'selesai' });
+    currentRecord.status = 'selesai';
+    showToast('🎉 Serah terima selesai!', 'success');
+    renderForm();
+  } catch(e) {
+    showToast('Gagal approve: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '✅ APPROVE CEK PRODUKSI';
+  }
+}
+
+// ── EXPORT TO PDF ─────────────────────────────────────────────
+function exportToPdf() {
+  const btn = document.getElementById('btnExportPdf');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> MENYIAPKAN PDF...';
+
+  // Sembunyikan elemen UI yang tidak perlu di-print
+  document.querySelector('.topnav').style.display = 'none';
+  document.getElementById('formFooter').style.display = 'none';
+  document.querySelector('.sub-tabs').style.display = 'none';
+  const screenForm = document.getElementById('screenForm');
+  screenForm.style.paddingTop = '16px'; // Hilangkan gap atas karena navbar hilang
+
+  // Buka semua section agar ikut ke-print
+  const secUtuh = document.getElementById('sec-utuh');
+  const secKoma = document.getElementById('sec-koma');
+  const secPremix = document.getElementById('sec-premix');
+  
+  const origU = secUtuh.style.display;
+  const origK = secKoma.style.display;
+  const origP = secPremix.style.display;
+
+  secUtuh.style.display = 'block';
+  secKoma.style.display = 'block';
+  secPremix.style.display = 'block';
+
+  const opt = {
+    margin:       [15, 10, 15, 10], // top, left, bottom, right
+    filename:     `CPB_${currentRecord.noWO}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, backgroundColor: '#0a0a0a', useCORS: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(screenForm).save().then(() => {
+    // Kembalikan semua UI ke asal
+    document.querySelector('.topnav').style.display = '';
+    document.getElementById('formFooter').style.display = '';
+    document.querySelector('.sub-tabs').style.display = 'flex';
+    screenForm.style.paddingTop = '52px';
+    
+    secUtuh.style.display = origU;
+    secKoma.style.display = origK;
+    secPremix.style.display = origP;
+
+    btn.disabled = false;
+    btn.innerHTML = '📄 EXPORT TO PDF';
+    showToast('✅ Berhasil download PDF', 'success');
+  });
+}
+
+// ── SUB TABS ─────────────────────────────────────────────────
+document.querySelectorAll('.sub-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSection = btn.dataset.sec;
+    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['utuh','koma','premix'].forEach(s => {
+      document.getElementById('sec-' + s).style.display = s === currentSection ? 'block' : 'none';
+    });
+  });
+});
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setLoadingText(txt) {
+  document.getElementById('loadingText').textContent = txt;
+}
+
+function showSearchMsg(msg) {
+  const el = document.getElementById('searchMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'msg-toast show ' + (type || '');
+  toastTimer = setTimeout(() => el.className = 'msg-toast', 3000);
+}
+
+window.addEventListener('beforeunload', e => {
+  if (hasChanges) e.returnValue = 'Ada perubahan yang belum disimpan!';
+});
+</script>
+</body>
+</html>
