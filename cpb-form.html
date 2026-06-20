@@ -88,7 +88,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .bb-no-badge{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);min-width:28px;}
 .bb-jumlah{margin-left:auto;text-align:right;}
 .bb-jumlah-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);}
-.bb-jumlah-uom{font-size:10px;color:var(--muted);}
+.bb-jumlah-uom{font-size:10px;color:var(--muted);text-transform:capitalize;}
 .bb-alts{padding:10px 14px;}
 .alt-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
 .alt-row:last-child{border-bottom:none;}
@@ -141,6 +141,47 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .banner-wait-produksi{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);color:var(--produksi);}
 
 @media(min-width:600px){.search-wrap{padding:40px;}.form-content{padding:16px 20px 130px;}.bb-card-header{padding:14px 18px;}.bb-alts{padding:12px 18px;}.bb-cek-row{padding:12px 18px 14px;}}
+
+/* ── PDF EXPORT STYLES (Hanya aktif saat download PDF) ── */
+.pdf-sec-title {
+  display: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--text);
+  letter-spacing: 2px;
+  margin: 24px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border2);
+}
+
+body.exporting-pdf .topnav,
+body.exporting-pdf .form-footer,
+body.exporting-pdf .sub-tabs { 
+  display: none !important; 
+}
+
+body.exporting-pdf #screenForm { 
+  padding-top: 16px !important; 
+}
+
+/* Buka semua section agar tercetak di PDF */
+body.exporting-pdf #sec-utuh,
+body.exporting-pdf #sec-koma,
+body.exporting-pdf #sec-premix { 
+  display: block !important; 
+}
+
+/* Munculkan judul section (Utuh/Koma/Premix) */
+body.exporting-pdf .pdf-sec-title { 
+  display: block !important; 
+}
+
+/* Buat keterangan UOM (Sak/Kantong/dll) lebih terang & besar di PDF */
+body.exporting-pdf .bb-jumlah-uom {
+  color: #e0e0e0 !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
 </style>
 </head>
 <body>
@@ -392,7 +433,6 @@ function renderForm() {
     : '-';
   document.getElementById('fMeta').textContent = tgl + ' · ' + (currentFormula.liniProses || '-');
 
-  // ALUR BARU
   const statusLabels = {
     pending:           'Menunggu Gudang',
     gudang_progress:   'Sedang Dicek Gudang',
@@ -402,7 +442,6 @@ function renderForm() {
     gudang_approved:   'Menunggu Apprv. Penyelia Produksi',
     selesai:           'Serah Terima Selesai ✅',
   };
-  
   const stEl = document.getElementById('fStatus');
   stEl.textContent = statusLabels[status] || status;
   stEl.className   = 'wo-status st-' + status;
@@ -444,12 +483,15 @@ function renderSection(sec) {
   const editGudang   = canEditGudang(role, status);
   const editProduksi = canEditProduksi(role, status);
 
+  const titles = { utuh: 'A · UTUH', koma: 'B · KOMA', premix: 'C · PREMIX' };
+  const titleHtml = `<div class="pdf-sec-title">${titles[sec]}</div>`;
+
   if (!rows.length) {
-    container.innerHTML = `<div class="section-empty">Tidak ada bahan baku untuk section ini.</div>`;
+    container.innerHTML = titleHtml + `<div class="section-empty">Tidak ada bahan baku untuk section ini.</div>`;
     return;
   }
 
-  container.innerHTML = rows.map((row, idx) => {
+  const itemsHtml = rows.map((row, idx) => {
     const bothChecked  = row.cekGudang && row.cekProduksi;
     const gudangChecked = row.cekGudang;
     const cardClass = bothChecked ? 'bb-card checked-both' : gudangChecked ? 'bb-card checked-gudang' : 'bb-card';
@@ -499,6 +541,9 @@ function renderSection(sec) {
       </div>`;
   }).join('');
 
+  // Masukkan title dan items ke dalam container
+  container.innerHTML = titleHtml + itemsHtml;
+
   container.querySelectorAll('.alt-check').forEach(el => {
     el.addEventListener('change', () => {
       const { sec, rowidx, altid } = el.dataset;
@@ -531,7 +576,6 @@ function renderSection(sec) {
 // ── PROGRESS ─────────────────────────────────────────────────
 function updateProgress() {
   const status = currentRecord.status;
-  // Hitung persentase berdasar stage saat ini
   const useGudang = ['pending','gudang_progress'].includes(status);
 
   ['utuh','koma','premix'].forEach(sec => {
@@ -549,11 +593,8 @@ function renderFooter(role, status) {
   const editG     = canEditGudang(role, status);
   const editP     = canEditProduksi(role, status);
   
-  // URUTAN BARU: Penyelia Gudang approve SETELAH Petugas Produksi submit (produksi_done)
   const approveG  = role === 'penyelia' && status === 'produksi_done';
-  // Penyelia Produksi approve SETELAH Penyelia Gudang approve (gudang_approved)
   const approveP  = role === 'penyelia-produksi' && status === 'gudang_approved';
-  
   const showPdf   = status === 'selesai';
 
   if (!editG && !editP && !approveG && !approveP && !showPdf) {
@@ -694,25 +735,10 @@ function exportToPdf() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-sm"></span> MENYIAPKAN PDF...';
 
-  // Sembunyikan elemen UI yang tidak perlu di-print
-  document.querySelector('.topnav').style.display = 'none';
-  document.getElementById('formFooter').style.display = 'none';
-  document.querySelector('.sub-tabs').style.display = 'none';
+  // Tambahkan penanda bahwa kita sedang merender layout untuk di print ke PDF
+  document.body.classList.add('exporting-pdf');
+
   const screenForm = document.getElementById('screenForm');
-  screenForm.style.paddingTop = '16px'; // Hilangkan gap atas karena navbar hilang
-
-  // Buka semua section agar ikut ke-print
-  const secUtuh = document.getElementById('sec-utuh');
-  const secKoma = document.getElementById('sec-koma');
-  const secPremix = document.getElementById('sec-premix');
-  
-  const origU = secUtuh.style.display;
-  const origK = secKoma.style.display;
-  const origP = secPremix.style.display;
-
-  secUtuh.style.display = 'block';
-  secKoma.style.display = 'block';
-  secPremix.style.display = 'block';
 
   const opt = {
     margin:       [15, 10, 15, 10], // top, left, bottom, right
@@ -723,16 +749,9 @@ function exportToPdf() {
   };
 
   html2pdf().set(opt).from(screenForm).save().then(() => {
-    // Kembalikan semua UI ke asal
-    document.querySelector('.topnav').style.display = '';
-    document.getElementById('formFooter').style.display = '';
-    document.querySelector('.sub-tabs').style.display = 'flex';
-    screenForm.style.paddingTop = '52px';
+    // Kembalikan tampilan UI secara otomatis setelah selesai
+    document.body.classList.remove('exporting-pdf');
     
-    secUtuh.style.display = origU;
-    secKoma.style.display = origK;
-    secPremix.style.display = origP;
-
     btn.disabled = false;
     btn.innerHTML = '📄 EXPORT TO PDF';
     showToast('✅ Berhasil download PDF', 'success');
