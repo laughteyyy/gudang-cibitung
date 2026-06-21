@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CPB Form — GUDANG Cibitung</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+  --bg:#0a0a0a; --surface:#111; --surface2:#161616; --surface3:#1c1c1c;
+  --border:#1e1e1e; --border2:#2a2a2a;
+  --accent:#e8ff00; --accent-dim:rgba(232,255,0,0.08);
+  --text:#f0f0f0; --text2:#aaa; --muted:#555;
+  --error:#ff4444; --success:#00e676; --warn:#ffb300;
+  --gudang:#00cfff; --produksi:#ff6b35;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* NAV */
+.topnav{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(10,10,10,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100;}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);}
+.nav-sep{color:var(--border2);}
+.nav-page{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.nav-actions{margin-left:auto;display:flex;gap:6px;align-items:center;}
+.nav-back{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:5px;}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);}
+.btn-pdf{background:transparent;border:1px solid rgba(0,230,118,.3);color:var(--success);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;display:none;}
+.btn-pdf:hover{background:rgba(0,230,118,.06);border-color:var(--success);}
+.btn-pdf.show{display:flex;align-items:center;gap:5px;}
+
+/* SCREENS */
+.screen{display:none;padding-top:52px;min-height:100vh;}
+.screen.active{display:block;animation:fadeUp .3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEARCH */
+.search-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);padding:24px;}
+.search-icon{font-size:56px;margin-bottom:16px;}
+.search-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:6px;}
+.search-sub{font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center;line-height:1.6;}
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:380px;}
+.wo-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;text-align:center;outline:none;transition:all .2s;margin-bottom:12px;}
+.wo-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,255,0,.05);}
+.wo-input::placeholder{color:#333;font-size:16px;letter-spacing:1px;font-family:'DM Sans',sans-serif;}
+.btn-scan{width:100%;background:transparent;border:1px dashed var(--border2);color:var(--muted);border-radius:8px;padding:12px;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-scan:hover{border-color:var(--accent);color:var(--accent);}
+.btn-cari{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;cursor:pointer;transition:all .2s;}
+.btn-cari:hover{box-shadow:0 4px 20px rgba(232,255,0,.2);}
+
+/* SCANNER */
+.scanner-wrap{display:flex;flex-direction:column;align-items:center;padding:24px;min-height:calc(100vh - 52px);}
+.scanner-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin:16px 0 6px;}
+.scanner-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+#qr-reader{width:100%;max-width:340px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.btn-cancel{margin-top:16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 24px;font-size:12px;cursor:pointer;transition:all .2s;}
+.btn-cancel:hover{border-color:var(--error);color:var(--error);}
+
+/* LOADING */
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);gap:12px;}
+.spinner-lg{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+.loading-text{font-size:13px;color:var(--muted);}
+.spinner-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FORM HEADER */
+.form-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;}
+.wo-badge{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.wo-number{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--accent);}
+.wo-status-chip{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:4px;text-transform:uppercase;}
+.st-pending{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.2);}
+.st-gudang_progress,.st-gudang_done{background:rgba(0,207,255,.1);color:var(--gudang);border:1px solid rgba(0,207,255,.2);}
+.st-gudang_approved,.st-produksi_progress,.st-produksi_done{background:rgba(255,107,53,.1);color:var(--produksi);border:1px solid rgba(255,107,53,.2);}
+.st-selesai{background:rgba(0,230,118,.1);color:var(--success);border:1px solid rgba(0,230,118,.2);}
+.wo-product{font-size:13px;font-weight:600;margin-bottom:2px;}
+.wo-meta{font-size:11px;color:var(--muted);}
+
+/* STATUS BANNER */
+.status-banner{margin:10px 12px;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.6;}
+.banner-wait{background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.15);color:var(--warn);}
+.banner-done{background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.15);color:var(--success);}
+
+/* SUB TABS */
+.sub-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:90;}
+.sub-tab{flex:1;padding:10px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .2s;}
+.sub-tab.active{color:var(--accent);border-color:var(--accent);}
+.tab-prog{display:block;font-size:13px;font-weight:700;margin-bottom:2px;}
+
+/* BB CARDS — redesigned with tata cara */
+.form-content{padding:10px 10px 130px;}
+
+.bb-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .2s;}
+.bb-card.cg{border-left:3px solid var(--gudang);}
+.bb-card.cp{border-left:3px solid var(--produksi);}
+.bb-card.done{border-left:3px solid var(--success);}
+
+/* Card header row */
+.bb-header{display:grid;grid-template-columns:32px 1fr auto;align-items:start;gap:8px;padding:12px 12px 8px;}
+.bb-no{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);line-height:1;}
+.bb-alts{display:flex;flex-direction:column;gap:4px;}
+.alt-item-row{display:flex;align-items:center;gap:8px;}
+.alt-checkbox{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.alt-checkbox:disabled{opacity:.3;cursor:not-allowed;}
+.alt-kode{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);min-width:76px;flex-shrink:0;}
+.alt-nama{font-size:12px;color:var(--text2);flex:1;line-height:1.3;}
+.bb-qty{text-align:right;flex-shrink:0;}
+.bb-qty-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);}
+.bb-qty-uom{font-size:10px;color:var(--muted);}
+
+/* Tata cara */
+.bb-tata-cara{margin:0 12px 10px;padding:8px 12px;background:rgba(232,255,0,.03);border:1px solid rgba(232,255,0,.08);border-radius:7px;}
+.bb-tata-cara-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:rgba(232,255,0,.5);text-transform:uppercase;margin-bottom:4px;}
+.bb-tata-cara-text{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* Cek buttons */
+.bb-cek-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px 12px;}
+.cek-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;font-weight:500;transition:all .2s;position:relative;}
+.cek-btn:disabled{opacity:.3;cursor:not-allowed;}
+.cek-btn.gudang{color:var(--gudang);}
+.cek-btn.gudang.on{background:rgba(0,207,255,.1);border-color:var(--gudang);}
+.cek-btn.gudang:not(:disabled):hover{border-color:var(--gudang);}
+.cek-btn.produksi{color:var(--produksi);}
+.cek-btn.produksi.on{background:rgba(255,107,53,.1);border-color:var(--produksi);}
+.cek-btn.produksi:not(:disabled):hover{border-color:var(--produksi);}
+.cek-icon{font-size:13px;}
+
+/* EMPTY */
+.sec-empty{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+
+/* FOOTER */
+.form-footer{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:10px 14px;display:none;}
+.form-footer.show{display:block;}
+.footer-inner{display:flex;gap:8px;max-width:600px;margin:0 auto;}
+.btn-save{flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-save:hover{border-color:var(--muted);}
+.btn-submit{flex:2;background:var(--accent);color:#000;border:none;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.btn-approve{width:100%;background:var(--success);color:#000;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:13px;z-index:200;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.toast.show{display:block;animation:fadeUp .2s ease both;}
+.toast.success{border-color:rgba(0,230,118,.3);color:var(--success);}
+.toast.error{border-color:rgba(255,68,68,.3);color:var(--error);}
+
+/* ═══════════════════════════════════
+   PRINT / PDF STYLES
+═══════════════════════════════════ */
+.print-area{display:none;}
+
+@media print {
+  body > *:not(.print-area){ display:none !important; }
+  .print-area{
+    display:block !important;
+    font-family:'Arial',sans-serif;
+    font-size:8pt;
+    color:#000;
+    padding:10mm;
+  }
+  .print-header{text-align:center;border-bottom:2px solid #000;padding-bottom:6mm;margin-bottom:5mm;}
+  .print-title{font-size:11pt;font-weight:bold;letter-spacing:1px;margin-bottom:3mm;}
+  .print-sub{font-size:8pt;color:#444;}
+  .print-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:2mm 8mm;margin-bottom:5mm;font-size:8pt;}
+  .print-meta-item{display:flex;gap:4px;}
+  .print-meta-key{font-weight:bold;min-width:100px;flex-shrink:0;}
+  .print-section-title{font-size:9pt;font-weight:bold;background:#f0f0f0;padding:2mm 3mm;margin-bottom:2mm;border-left:3px solid #000;}
+  .print-table{width:100%;border-collapse:collapse;margin-bottom:6mm;font-size:7.5pt;}
+  .print-table th{background:#e8e8e8;border:1px solid #999;padding:2mm 2.5mm;text-align:center;font-weight:bold;font-size:7pt;}
+  .print-table td{border:1px solid #ccc;padding:2mm 2.5mm;vertical-align:top;}
+  .print-table .col-no{width:7mm;text-align:center;font-weight:bold;}
+  .print-table .col-cek{width:12mm;text-align:center;}
+  .print-table .col-bb{width:auto;}
+  .print-table .col-qty{width:16mm;text-align:center;}
+  .print-table .col-tc{width:40mm;}
+  .check-mark{font-size:10pt;text-align:center;}
+  .alt-print{display:block;font-size:6.5pt;color:#555;padding-left:2mm;}
+  .alt-print.selected{color:#000;font-weight:600;}
+  .alt-print.selected::before{content:'✓ ';}
+  .print-sign{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:8mm;padding-top:4mm;border-top:1px solid #000;}
+  .sign-box{text-align:center;}
+  .sign-line{border-bottom:1px solid #000;height:15mm;margin-bottom:2mm;}
+  .sign-label{font-size:7.5pt;font-weight:bold;}
+  .sign-date{font-size:7pt;color:#555;margin-top:1mm;}
+  .print-footer{margin-top:4mm;padding-top:2mm;border-top:1px solid #ccc;font-size:7pt;color:#777;display:flex;justify-content:space-between;}
+  @page{size:A4;margin:10mm;}
+}
+
+@media (max-width:600px){
+  .bb-header{grid-template-columns:28px 1fr auto;}
+  .alt-kode{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <span class="nav-brand">GUDANG</span>
+  <span class="nav-sep">|</span>
+  <span class="nav-page">CPB Form</span>
+  <div class="nav-actions">
+    <button class="btn-pdf" id="btnExportPDF">📄 Export PDF</button>
+    <a class="nav-back" href="index.html">← Dashboard</a>
+  </div>
+</nav>
+
+<!-- SEARCH -->
+<div class="screen active" id="screenSearch">
+  <div class="search-wrap">
+    <div class="search-icon">📋</div>
+    <div class="search-title">Dokumen CPB</div>
+    <div class="search-sub">Scan QR label pada pallet<br>atau ketik nomor WO</div>
+    <div class="search-card">
+      <input class="wo-input" type="text" id="woInput" placeholder="No. WO..." maxlength="20"/>
+      <button class="btn-scan" id="btnScan">📷 Scan QR Label</button>
+      <button class="btn-cari" id="btnCari">BUKA FORM</button>
+      <div id="searchMsg" style="margin-top:10px;font-size:12px;color:var(--error);display:none;text-align:center;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCANNER -->
+<div class="screen" id="screenScanner">
+  <div class="scanner-wrap">
+    <div class="scanner-title">Scan QR Label</div>
+    <div class="scanner-sub">Arahkan kamera ke QR code pada label pallet</div>
+    <div id="qr-reader"></div>
+    <button class="btn-cancel" id="btnCancelScan">✕ Batal</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="screen" id="screenLoading">
+  <div class="loading-wrap">
+    <div class="spinner-lg"></div>
+    <div class="loading-text" id="loadingText">Mencari WO...</div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div class="screen" id="screenForm">
+  <div class="form-header">
+    <div class="wo-badge">
+      <div class="wo-number" id="fWoNo">-</div>
+      <div class="wo-status-chip" id="fStatus">-</div>
+    </div>
+    <div class="wo-product" id="fProduct">-</div>
+    <div class="wo-meta" id="fMeta">-</div>
+  </div>
+
+  <div id="statusBanner"></div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" data-sec="utuh">
+      <span class="tab-prog" id="prog-utuh">-</span>A · Utuh
+    </button>
+    <button class="sub-tab" data-sec="koma">
+      <span class="tab-prog" id="prog-koma">-</span>B · Koma
+    </button>
+    <button class="sub-tab" data-sec="premix">
+      <span class="tab-prog" id="prog-premix">-</span>C · Premix
+    </button>
+  </div>
+
+  <div class="form-content">
+    <div id="sec-utuh"></div>
+    <div id="sec-koma"   style="display:none;"></div>
+    <div id="sec-premix" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="form-footer" id="formFooter">
+  <div class="footer-inner" id="footerInner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PRINT AREA — hidden on screen, shown on print -->
+<div class="print-area" id="printArea"></div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+                           from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, serverTimestamp }
+                           from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBK8eNz6lYGT9dI5b01sCPdRFHBU8_i_40",
+  authDomain:"gudang-cibitung.firebaseapp.com",
+  projectId:"gudang-cibitung",
+  storageBucket:"gudang-cibitung.firebasestorage.app",
+  messagingSenderId:"570827859176",
+  appId:"1:570827859176:web:ccefaeeb0b964bd39dd55d"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ─────────────────────────────────────────────────────
+let currentUser = null;
+let currentRecord = null;
+let currentWODoc = null;
+let currentFormula = null;
+let recordDocId = null;
+let currentSection = 'utuh';
+let html5QrScanner = null;
+let hasChanges = false;
+
+// ── AUTH ─────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  const snap = await getDoc(doc(db,'users', user.uid));
+  if (!snap.exists()) { window.location.href = 'index.html'; return; }
+  currentUser = { uid: user.uid, ...snap.data() };
+});
+
+// ── SEARCH ───────────────────────────────────────────────────
+document.getElementById('btnCari').addEventListener('click', () => {
+  const val = document.getElementById('woInput').value.trim().replace('WO-','').replace('WO','');
+  if (!val) { showSearchMsg('Masukkan nomor WO dulu.'); return; }
+  loadWO(val);
+});
+document.getElementById('woInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnCari').click();
+});
+
+// ── QR SCANNER ────────────────────────────────────────────────
+document.getElementById('btnScan').addEventListener('click', () => {
+  showScreen('screenScanner');
+  if (!html5QrScanner) html5QrScanner = new Html5Qrcode('qr-reader');
+  html5QrScanner.start(
+    { facingMode:'environment' },
+    { fps:10, qrbox:{width:240,height:240} },
+    decoded => {
+      html5QrScanner.stop().catch(()=>{});
+      const no = decoded.replace('WO-','').trim();
+      document.getElementById('woInput').value = no;
+      showScreen('screenSearch');
+      loadWO(no);
+    }, ()=>{}
+  ).catch(() => { showSearchMsg('Kamera tidak bisa diakses.'); showScreen('screenSearch'); });
+});
+document.getElementById('btnCancelScan').addEventListener('click', () => {
+  if (html5QrScanner && html5QrScanner.isScanning) html5QrScanner.stop().catch(()=>{});
+  showScreen('screenSearch');
+});
+
+// ── LOAD WO ──────────────────────────────────────────────────
+async function loadWO(noWO) {
+  showScreen('screenLoading');
+  setLoadingText('Mencari WO-' + noWO + '...');
+  try {
+    const woSnap = await getDocs(query(collection(db,'work_orders'), where('noWO','==',noWO)));
+    if (woSnap.empty) { showSearchMsg('WO-'+noWO+' tidak ditemukan.'); showScreen('screenSearch'); return; }
+    const woDoc = woSnap.docs[0];
+    currentWODoc = { id: woDoc.id, ...woDoc.data() };
+
+    setLoadingText('Memuat formula...');
+    const fSnap = await getDoc(doc(db,'formulas', currentWODoc.formulaId));
+    if (!fSnap.exists()) { showSearchMsg('Formula tidak ditemukan.'); showScreen('screenSearch'); return; }
+    currentFormula = { id: fSnap.id, ...fSnap.data() };
+
+    setLoadingText('Memuat checklist...');
+    const recSnap = await getDocs(query(collection(db,'cpb_records'), where('woId','==',currentWODoc.id)));
+    if (!recSnap.empty) {
+      recordDocId = recSnap.docs[0].id;
+      currentRecord = recSnap.docs[0].data();
+    } else {
+      recordDocId = null;
+      currentRecord = buildFresh();
+    }
+    renderForm();
+    showScreen('screenForm');
+  } catch(e) {
+    showSearchMsg('Error: ' + e.message);
+    showScreen('screenSearch');
+  }
+}
+
+function buildFresh() {
+  const build = items => (items||[]).map(row => ({
+    no: row.no,
+    alts: row.alts || [],
+    selectedAltIds: [],
+    jumlah: row.jumlah || '',
+    uom: row.uom || '',
+    tataCara: row.tataCara || '',
+    cekGudang: false,
+    cekProduksi: false,
+  }));
+  return {
+    woId: currentWODoc.id,
+    noWO: currentWODoc.noWO,
+    namaFormula: currentWODoc.namaFormula,
+    kodeFormula: currentWODoc.kodeFormula || '',
+    tanggal: currentWODoc.tanggal,
+    status: 'pending',
+    utuh:   build(currentFormula.utuh),
+    koma:   build(currentFormula.koma),
+    premix: build(currentFormula.premix),
+  };
+}
+
+// ── RENDER FORM ───────────────────────────────────────────────
+function renderForm() {
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+
+  document.getElementById('fWoNo').textContent    = 'WO-' + currentRecord.noWO;
+  document.getElementById('fProduct').textContent = currentRecord.namaFormula;
+  const tgl = currentRecord.tanggal
+    ? new Date(currentRecord.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})
+    : '-';
+  document.getElementById('fMeta').textContent = tgl + ' · ' + (currentFormula?.liniProses||'-');
+
+  const stLabels = {
+    pending:'Menunggu Gudang', gudang_progress:'Dicek Gudang',
+    gudang_done:'Menunggu Approval Gudang', gudang_approved:'Gudang ✓ — Menunggu Produksi',
+    produksi_progress:'Dicek Produksi', produksi_done:'Menunggu Approval Produksi',
+    selesai:'Serah Terima Selesai ✅',
+  };
+  const stEl = document.getElementById('fStatus');
+  stEl.textContent = stLabels[status] || status;
+  stEl.className   = 'wo-status-chip st-' + status;
+
+  // Banner
+  const banner = document.getElementById('statusBanner');
+  banner.innerHTML = '';
+  if (status==='selesai') banner.innerHTML = `<div class="status-banner banner-done">✅ Dokumen selesai dan disetujui kedua pihak.</div>`;
+  else if (status==='gudang_done') banner.innerHTML = `<div class="status-banner banner-wait">⏳ Menunggu approval Penyelia Gudang.</div>`;
+  else if (status==='produksi_done') banner.innerHTML = `<div class="status-banner banner-wait">⏳ Menunggu approval Penyelia Produksi.</div>`;
+
+  // PDF button
+  const pdfBtn = document.getElementById('btnExportPDF');
+  if (['gudang_approved','produksi_progress','produksi_done','selesai'].includes(status) ||
+      ['penyelia','admin','penyelia-produksi'].includes(role)) {
+    pdfBtn.classList.add('show');
+  }
+
+  renderSection('utuh');
+  renderSection('koma');
+  renderSection('premix');
+  updateProgress();
+  renderFooter(role, status);
+}
+
+function canEditGudang(role, status) {
+  return role==='petugas' && ['pending','gudang_progress'].includes(status);
+}
+function canEditProduksi(role, status) {
+  return role==='petugas-produksi' && ['gudang_approved','produksi_progress'].includes(status);
+}
+
+function renderSection(sec) {
+  const container  = document.getElementById('sec-' + sec);
+  const rows       = currentRecord[sec] || [];
+  const role       = currentUser?.role;
+  const status     = currentRecord.status;
+  const editG      = canEditGudang(role, status);
+  const editP      = canEditProduksi(role, status);
+
+  if (!rows.length) {
+    container.innerHTML = `<div class="sec-empty">Tidak ada bahan baku pada section ini.</div>`;
+    return;
+  }
+
+  container.innerHTML = rows.map((row, idx) => {
+    const cardClass = row.cekGudang && row.cekProduksi ? 'bb-card done'
+                    : row.cekGudang ? 'bb-card cg'
+                    : 'bb-card';
+
+    const altsHtml = (row.alts||[]).map(alt => {
+      const sel = (row.selectedAltIds||[]).includes(alt.id);
+      return `
+        <div class="alt-item-row">
+          <input type="checkbox" class="alt-checkbox"
+            ${sel?'checked':''} ${!editG?'disabled':''}
+            data-sec="${sec}" data-idx="${idx}" data-altid="${alt.id}"/>
+          <span class="alt-kode">${alt.kode||''}</span>
+          <span class="alt-nama">${alt.nama||'-'}</span>
+        </div>`;
+    }).join('');
+
+    const tataCara = row.tataCara
+      ? `<div class="bb-tata-cara">
+           <div class="bb-tata-cara-label">📋 Tata Cara</div>
+           <div class="bb-tata-cara-text">${row.tataCara}</div>
+         </div>`
+      : '';
+
+    return `
+      <div class="${cardClass}" id="card-${sec}-${idx}">
+        <div class="bb-header">
+          <div class="bb-no">${row.no}</div>
+          <div class="bb-alts">${altsHtml}</div>
+          <div class="bb-qty">
+            <div class="bb-qty-val">${row.jumlah||'-'}</div>
+            <div class="bb-qty-uom">${row.uom||''}</div>
+          </div>
+        </div>
+        ${tataCara}
+        <div class="bb-cek-row">
+          <button class="cek-btn gudang ${row.cekGudang?'on':''}"
+            ${!editG?'disabled':''} data-sec="${sec}" data-idx="${idx}" data-type="gudang">
+            <span class="cek-icon">${row.cekGudang?'✅':'☐'}</span> Cek Gudang
+          </button>
+          <button class="cek-btn produksi ${row.cekProduksi?'on':''}"
+            ${!editP?'disabled':''} data-sec="${sec}" data-idx="${idx}" data-type="produksi">
+            <span class="cek-icon">${row.cekProduksi?'✅':'☐'}</span> Cek Produksi
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Alt checkbox events
+  container.querySelectorAll('.alt-checkbox').forEach(el => {
+    el.addEventListener('change', () => {
+      const row = currentRecord[el.dataset.sec][parseInt(el.dataset.idx)];
+      if (el.checked) { if (!row.selectedAltIds.includes(el.dataset.altid)) row.selectedAltIds.push(el.dataset.altid); }
+      else row.selectedAltIds = row.selectedAltIds.filter(id => id !== el.dataset.altid);
+      hasChanges = true;
+    });
+  });
+
+  // Cek button events
+  container.querySelectorAll('.cek-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = currentRecord[btn.dataset.sec][parseInt(btn.dataset.idx)];
+      if (btn.dataset.type==='gudang') row.cekGudang = !row.cekGudang;
+      else row.cekProduksi = !row.cekProduksi;
+      hasChanges = true;
+      renderSection(btn.dataset.sec);
+      updateProgress();
+    });
+  });
+}
+
+// ── PROGRESS ─────────────────────────────────────────────────
+function updateProgress() {
+  const status = currentRecord.status;
+  const useProd = ['gudang_approved','produksi_progress','produksi_done','selesai'].includes(status);
+  ['utuh','koma','premix'].forEach(sec => {
+    const rows = currentRecord[sec]||[];
+    const done = rows.filter(r => useProd ? r.cekProduksi : r.cekGudang).length;
+    document.getElementById('prog-'+sec).textContent = rows.length ? `${done}/${rows.length}` : '-';
+  });
+}
+
+// ── FOOTER ───────────────────────────────────────────────────
+function renderFooter(role, status) {
+  const footer = document.getElementById('formFooter');
+  const inner  = document.getElementById('footerInner');
+  const editG  = canEditGudang(role, status);
+  const editP  = canEditProduksi(role, status);
+  const appG   = role==='penyelia' && status==='gudang_done';
+  const appP   = role==='penyelia-produksi' && status==='produksi_done';
+
+  if (!editG && !editP && !appG && !appP) { footer.classList.remove('show'); return; }
+  footer.classList.add('show');
+
+  if (editG || editP) {
+    const label = editG ? 'GUDANG' : 'PRODUKSI';
+    inner.innerHTML = `
+      <button class="btn-save" id="btnSave">💾 Simpan</button>
+      <button class="btn-submit" id="btnSubmit">SUBMIT ${label}</button>`;
+    document.getElementById('btnSave').addEventListener('click', () => saveProgress(false));
+    document.getElementById('btnSubmit').addEventListener('click', () => saveProgress(true));
+  }
+  if (appG) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove">✅ APPROVE CEK GUDANG</button>`;
+    document.getElementById('btnApprove').addEventListener('click', () => doApprove('gudang'));
+  }
+  if (appP) {
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove" style="background:var(--produksi);">✅ APPROVE CEK PRODUKSI</button>`;
+    document.getElementById('btnApprove').addEventListener('click', () => doApprove('produksi'));
+  }
+}
+
+// ── SAVE ─────────────────────────────────────────────────────
+async function saveProgress(isSubmit) {
+  const role   = currentUser?.role;
+  const status = currentRecord.status;
+  const editG  = canEditGudang(role, status);
+  const btn    = document.getElementById(isSubmit?'btnSubmit':'btnSave');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>'; }
+
+  let newStatus = status;
+  if (isSubmit) {
+    const allDone = ['utuh','koma','premix'].every(s =>
+      (currentRecord[s]||[]).every(r => editG ? r.cekGudang : r.cekProduksi)
+    );
+    if (!allDone) {
+      showToast('Centang semua bahan baku dulu!','error');
+      if (btn) { btn.disabled=false; btn.innerHTML='SUBMIT '+(editG?'GUDANG':'PRODUKSI'); }
+      return;
+    }
+    newStatus = editG ? 'gudang_done' : 'produksi_done';
+  } else {
+    newStatus = editG ? 'gudang_progress' : 'produksi_progress';
+  }
+
+  try {
+    const data = { ...currentRecord, status: newStatus, updatedAt: serverTimestamp() };
+    if (!recordDocId) {
+      const ref = await addDoc(collection(db,'cpb_records'), data);
+      recordDocId = ref.id;
+    } else {
+      await updateDoc(doc(db,'cpb_records', recordDocId), data);
+    }
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status: newStatus });
+    currentRecord.status = newStatus;
+    hasChanges = false;
+    showToast(isSubmit ? '✅ Submit berhasil!' : '💾 Progress tersimpan.','success');
+    renderForm();
+  } catch(e) {
+    showToast('Error: '+e.message,'error');
+  } finally {
+    if (btn) { btn.disabled=false; btn.innerHTML=isSubmit?'SUBMIT':'💾 Simpan'; }
+  }
+}
+
+// ── APPROVE ──────────────────────────────────────────────────
+async function doApprove(type) {
+  const btn = document.getElementById('btnApprove');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
+  const newStatus = type==='gudang' ? 'gudang_approved' : 'selesai';
+  const extraData = type==='gudang'
+    ? { gudangApprovedBy: currentUser.name, gudangApprovedAt: serverTimestamp() }
+    : { produksiApprovedBy: currentUser.name, produksiApprovedAt: serverTimestamp() };
+  try {
+    await updateDoc(doc(db,'cpb_records', recordDocId), { status:newStatus, ...extraData, updatedAt:serverTimestamp() });
+    await updateDoc(doc(db,'work_orders', currentWODoc.id), { status:newStatus });
+    currentRecord.status = newStatus;
+    if (type==='produksi') { currentRecord.produksiApprovedBy = currentUser.name; }
+    if (type==='gudang')   { currentRecord.gudangApprovedBy   = currentUser.name; }
+    showToast(type==='gudang' ? '✅ Cek Gudang disetujui!' : '🎉 Serah terima selesai!','success');
+    renderForm();
+    if (type==='produksi') generatePrintArea(); // auto-prepare PDF on final approve
+  } catch(e) {
+    showToast('Gagal approve: '+e.message,'error');
+    btn.disabled=false; btn.innerHTML='✅ APPROVE';
+  }
+}
+
+// ── PDF / PRINT ───────────────────────────────────────────────
+document.getElementById('btnExportPDF').addEventListener('click', () => {
+  generatePrintArea();
+  setTimeout(() => window.print(), 300);
+});
+
+function generatePrintArea() {
+  const r  = currentRecord;
+  const f  = currentFormula;
+  const tgl = r.tanggal
+    ? new Date(r.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})
+    : '-';
+  const now = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const buildTable = (rows, title) => {
+    if (!rows||!rows.length) return '';
+    const rowsHtml = rows.map(row => {
+      const altsHtml = (row.alts||[]).map(alt => {
+        const selected = (row.selectedAltIds||[]).includes(alt.id);
+        return `<span class="alt-print ${selected?'selected':''}">${alt.kode?alt.kode+' — ':''}${alt.nama}</span>`;
+      }).join('');
+      return `
+        <tr>
+          <td class="col-no">${row.no}</td>
+          <td class="col-cek check-mark">${row.cekGudang?'✓':''}</td>
+          <td class="col-cek check-mark">${row.cekProduksi?'✓':''}</td>
+          <td class="col-bb">${altsHtml}</td>
+          <td class="col-qty" style="text-align:center;">${row.jumlah||'-'}<br><small>${row.uom||''}</small></td>
+          <td class="col-tc" style="font-size:7pt;">${row.tataCara||''}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div class="print-section-title">${title}</div>
+      <table class="print-table">
+        <thead>
+          <tr>
+            <th class="col-no">No</th>
+            <th class="col-cek">Cek<br>Gudang</th>
+            <th class="col-cek">Cek<br>Produksi</th>
+            <th class="col-bb">Bahan Baku</th>
+            <th class="col-qty">Jumlah</th>
+            <th class="col-tc">Tata Cara</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>`;
+  };
+
+  const gudangInfo = r.gudangApprovedBy
+    ? `Disetujui: ${r.gudangApprovedBy}` : 'Belum disetujui';
+  const produksiInfo = r.produksiApprovedBy
+    ? `Disetujui: ${r.produksiApprovedBy}` : 'Belum disetujui';
+
+  document.getElementById('printArea').innerHTML = `
+    <div class="print-header">
+      <div class="print-title">DOKUMEN SERAH TERIMA BAHAN BAKU</div>
+      <div class="print-sub">PT Nutrifood Indonesia · Cibitung Plant · [COPY TERKENDALI]</div>
+    </div>
+
+    <div class="print-meta-grid">
+      <div class="print-meta-item"><span class="print-meta-key">Nama Formula Baku</span>: ${r.namaFormula}</div>
+      <div class="print-meta-item"><span class="print-meta-key">No. WO</span>: ${r.noWO}</div>
+      <div class="print-meta-item"><span class="print-meta-key">Kode Formula</span>: ${r.kodeFormula||f?.kodeFormula||'-'}</div>
+      <div class="print-meta-item"><span class="print-meta-key">No. Batch</span>: ${currentWODoc?.noBatch||'-'}</div>
+      <div class="print-meta-item"><span class="print-meta-key">Tanggal Berlaku</span>: ${tgl}</div>
+      <div class="print-meta-item"><span class="print-meta-key">Lokasi Plant</span>: ${f?.plant||'CIBITUNG'}</div>
+      <div class="print-meta-item"><span class="print-meta-key">Lini Proses</span>: ${f?.liniProses||'-'}</div>
+      <div class="print-meta-item"><span class="print-meta-key">Batch Size</span>: ${f?.batchRatio||'-'} / ${f?.batchSize||'-'} ${f?.batchUnit||'g'}</div>
+      ${currentWODoc?.groupLokasi1?`<div class="print-meta-item"><span class="print-meta-key">Group Lokasi</span>: ${currentWODoc.groupLokasi1}${currentWODoc.groupLokasi2?' / '+currentWODoc.groupLokasi2:''}${currentWODoc.groupLokasi3?' / '+currentWODoc.groupLokasi3:''}</div>`:''}
+    </div>
+
+    ${buildTable(r.utuh,   'A. Bahan Baku Utuh')}
+    ${buildTable(r.koma,   'B. Bahan Baku Koma')}
+    ${buildTable(r.premix, 'C. Premix')}
+
+    <div class="print-sign">
+      <div class="sign-box">
+        <div class="sign-line"></div>
+        <div class="sign-label">Warehouse Dept.</div>
+        <div class="sign-date">${gudangInfo}</div>
+      </div>
+      <div class="sign-box">
+        <div class="sign-line"></div>
+        <div class="sign-label">Produksi Dept.</div>
+        <div class="sign-date">${produksiInfo}</div>
+      </div>
+    </div>
+
+    <div class="print-footer">
+      <span>Dicetak pada: ${now}</span>
+      <span>WO-${r.noWO} · Status: ${r.status}</span>
+    </div>
+  `;
+}
+
+// ── SUB TABS ─────────────────────────────────────────────────
+document.querySelectorAll('.sub-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSection = btn.dataset.sec;
+    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['utuh','koma','premix'].forEach(s => {
+      document.getElementById('sec-'+s).style.display = s===currentSection?'block':'none';
+    });
+  });
+});
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function setLoadingText(t) { document.getElementById('loadingText').textContent = t; }
+function showSearchMsg(m) {
+  const el = document.getElementById('searchMsg');
+  el.textContent = m; el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 4000);
+}
+let toastTimer;
+function showToast(msg, type) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show '+(type||'');
+  toastTimer = setTimeout(() => el.className='toast', 3000);
+}
+window.addEventListener('beforeunload', e => { if (hasChanges) e.returnValue='Ada perubahan belum disimpan!'; });
+</script>
+</body>
+</html>
