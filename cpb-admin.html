@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPB Admin — GUDANG Cibitung</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root {
+  --bg:#0a0a0a; --surface:#111; --surface2:#161616; --surface3:#1a1a1a;
+  --border:#1e1e1e; --border2:#2a2a2a;
+  --accent:#e8ff00; --accent-dim:rgba(232,255,0,0.08);
+  --text:#f0f0f0; --text2:#aaa; --muted:#555;
+  --error:#ff4444; --success:#00e676; --warn:#ffb300;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* NAV */
+.topnav{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(10,10,10,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;z-index:100;}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);}
+.nav-sep{color:var(--border2);font-size:18px;}
+.nav-page{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.nav-back{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:6px;}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);}
+
+/* TABS */
+.main-tabs{position:fixed;top:52px;left:0;right:0;height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:4px;z-index:99;}
+.tab-btn{background:transparent;border:1px solid transparent;border-radius:6px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.tab-btn:hover{color:var(--text2);}
+.tab-btn.active{background:var(--accent-dim);border-color:rgba(232,255,0,0.15);color:var(--accent);}
+
+/* CONTENT */
+.content{margin-top:96px;padding:20px;max-width:880px;margin-left:auto;margin-right:auto;}
+.content-section{display:none;} .content-section.active{display:block;animation:fadeUp .3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;}
+.btn-primary{background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 18px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(232,255,0,0.2);transform:translateY(-1px);}
+.btn-sec{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:9px 18px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-sec:hover{border-color:var(--muted);}
+
+/* FORMULA CARDS */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+.formula-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:all .2s;position:relative;}
+.formula-card:hover{border-color:rgba(232,255,0,0.2);transform:translateY(-2px);}
+.fc-name{font-weight:600;font-size:13px;margin-bottom:5px;line-height:1.4;}
+.fc-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px;}
+.fc-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;color:var(--muted);}
+.card-actions{position:absolute;top:14px;right:14px;display:flex;gap:4px;opacity:0;transition:opacity .2s;}
+.formula-card:hover .card-actions{opacity:1;}
+.icon-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+.icon-btn.del:hover{border-color:var(--error);color:var(--error);}
+
+/* WO TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.wo-table{width:100%;border-collapse:collapse;}
+.wo-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.wo-table td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.wo-table tbody tr:last-child td{border-bottom:none;}
+.wo-table tbody tr:hover td{background:rgba(255,255,255,0.01);}
+.wo-no{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:var(--accent);}
+.wo-product{font-size:12px;color:var(--text2);margin-top:2px;}
+.status-chip{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:4px;text-transform:uppercase;}
+.s-pending{background:rgba(255,179,0,.1);color:#ffb300;border:1px solid rgba(255,179,0,.2);}
+.s-gudang{background:rgba(0,207,255,.1);color:#00cfff;border:1px solid rgba(0,207,255,.2);}
+.s-approved{background:rgba(0,230,118,.1);color:#00e676;border:1px solid rgba(0,230,118,.2);}
+.s-selesai{background:rgba(232,255,0,.1);color:#e8ff00;border:1px solid rgba(232,255,0,.2);}
+.td-actions{display:flex;gap:4px;}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:700px;margin:auto;animation:fadeUp .3s ease both;}
+.modal-header{padding:22px 26px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
+.modal-close{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{border-color:var(--error);color:var(--error);}
+.modal-body{padding:22px 26px;}
+.modal-footer{padding:14px 26px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+/* STEP INDICATOR */
+.steps{display:flex;gap:8px;margin-bottom:22px;}
+.step{flex:1;padding:8px 0;border-bottom:2px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center;transition:all .2s;}
+.step.active{border-color:var(--accent);color:var(--accent);}
+.step.done{border-color:rgba(0,230,118,.4);color:#00e676;}
+
+/* FORM FIELDS */
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:all .2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,255,0,.05);}
+.field select option{background:#111;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* BB SECTION (formula items) */
+.sub-tabs{display:flex;gap:3px;margin-bottom:16px;background:var(--bg);padding:3px;border-radius:7px;border:1px solid var(--border);}
+.sub-tab{flex:1;background:transparent;border:none;border-radius:5px;padding:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.sub-tab.active{background:var(--surface);color:var(--accent);}
+.sub-section{display:none;} .sub-section.active{display:block;}
+
+.bb-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:8px;}
+.bb-row-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bb-no{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);min-width:32px;}
+.bb-del{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.bb-del:hover{border-color:var(--error);color:var(--error);}
+.alt-item{display:grid;grid-template-columns:90px 1fr 18px;gap:6px;align-items:center;margin-bottom:6px;}
+.alt-input{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 9px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;outline:none;transition:border-color .2s;width:100%;}
+.alt-input.wide{font-family:'DM Sans',sans-serif;font-size:12px;}
+.alt-input:focus{border-color:rgba(232,255,0,.3);}
+.alt-rem{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:color .2s;padding:0;}
+.alt-rem:hover{color:var(--error);}
+.btn-add-alt{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:6px;padding:6px;font-size:11px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.btn-add-alt:hover{border-color:var(--accent);color:var(--accent);}
+.qty-row{display:grid;grid-template-columns:80px 1fr;gap:8px;}
+.btn-add-row{width:100%;background:transparent;border:1px dashed var(--border2);color:var(--muted);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.btn-add-row:hover{border-color:var(--accent);color:var(--accent);}
+
+/* MSG */
+.msg{padding:10px 14px;border-radius:7px;font-size:12px;margin-top:10px;display:none;}
+.msg.error{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);color:var(--error);display:block;}
+.msg.success{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);color:var(--success);display:block;}
+
+/* PRINT OVERLAY */
+.print-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.print-overlay.open{display:flex;}
+.label-card{background:#fff;color:#000;border-radius:8px;padding:20px 20px 16px;width:260px;text-align:center;font-family:'DM Sans',sans-serif;}
+.lbl-brand{font-size:8px;letter-spacing:2px;color:#888;margin-bottom:2px;text-transform:uppercase;}
+.lbl-doc{font-size:9px;font-weight:600;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;}
+.lbl-wo{font-size:28px;font-weight:800;letter-spacing:3px;margin:6px 0 2px;color:#111;}
+.lbl-product{font-size:10px;font-weight:600;color:#333;margin-bottom:2px;}
+.lbl-date{font-size:9px;color:#888;}
+.print-btns{display:flex;gap:10px;}
+.btn-print{background:var(--accent);color:#000;border:none;border-radius:8px;padding:11px 22px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;}
+.btn-close-p{background:transparent;border:1px solid #444;color:#aaa;border-radius:8px;padding:11px 22px;font-size:12px;cursor:pointer;}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-text{font-size:13px;}
+
+/* PDF IMPORT */
+.btn-import{background:transparent;border:1px solid rgba(0,207,255,.3);color:#00cfff;border-radius:8px;padding:9px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.btn-import:hover{background:rgba(0,207,255,.06);border-color:#00cfff;}
+.dropzone{border:2px dashed var(--border2);border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.dropzone:hover,.dropzone.drag{border-color:#00cfff;background:rgba(0,207,255,.04);}
+.dropzone-icon{font-size:36px;margin-bottom:10px;}
+.dropzone-text{font-size:13px;color:var(--muted);margin-bottom:4px;}
+.dropzone-sub{font-size:11px;color:var(--border2);}
+.parse-log{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;max-height:160px;overflow-y:auto;margin-bottom:14px;}
+.parse-log .ok{color:var(--success);}
+.parse-log .warn{color:var(--warn);}
+.parse-log .err{color:var(--error);}
+.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.preview-field{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:10px 12px;}
+.preview-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.preview-val{font-size:12px;color:var(--text);word-break:break-word;}
+.bb-preview-section{margin-bottom:12px;}
+.bb-preview-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
+.bb-preview-row{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:4px;font-size:12px;}
+.bb-preview-no{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--accent);margin-right:8px;}
+.bb-preview-alt{color:var(--text2);font-size:11px;display:block;padding-left:24px;}
+.bb-preview-qty{float:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--warn);}
+.sec-header-btns{display:flex;gap:8px;align-items:center;}
+
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media print {
+  body>*:not(.print-overlay){display:none!important;}
+  .print-overlay{position:static;background:white!important;display:flex!important;}
+  .print-btns{display:none!important;}
+  .label-card{box-shadow:none;border:1px solid #ddd;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <span class="nav-brand">GUDANG</span>
+  <span class="nav-sep">|</span>
+  <span class="nav-page">CPB Admin</span>
+  <a class="nav-back" href="index.html">← Dashboard</a>
+</nav>
+
+<!-- MAIN TABS -->
+<div class="main-tabs">
+  <button class="tab-btn active" data-tab="formula">📋 Formula Master</button>
+  <button class="tab-btn" data-tab="wo">📦 Work Order</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- FORMULA TAB -->
+  <div class="content-section active" id="tab-formula">
+    <div class="sec-header">
+      <div class="sec-title">Formula Master</div>
+      <div class="sec-header-btns">
+        <button class="btn-import" id="btnImportPDF">📄 Import PDF PPIC</button>
+        <button class="btn-primary" id="btnAddFormula">+ Tambah Manual</button>
+      </div>
+    </div>
+    <div class="card-grid" id="formulaGrid">
+      <div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Memuat data formula...</div></div>
+    </div>
+  </div>
+
+  <!-- WO TAB -->
+  <div class="content-section" id="tab-wo">
+    <div class="sec-header">
+      <div class="sec-title">Work Order</div>
+      <button class="btn-primary" id="btnAddWO">+ Buat WO</button>
+    </div>
+    <div class="table-wrap">
+      <table class="wo-table">
+        <thead>
+          <tr>
+            <th>No. WO</th>
+            <th>Formula / Produk</th>
+            <th>Tgl</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="woTableBody">
+          <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: ADD FORMULA -->
+<div class="overlay" id="overlayFormula">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="formulaModalTitle">Tambah Formula</div>
+      <button class="modal-close" id="closeFormula">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="steps">
+        <div class="step active" data-step="1">1 · Info Dasar</div>
+        <div class="step" data-step="2">2 · Bahan Baku</div>
+      </div>
+
+      <!-- STEP 1: INFO DASAR -->
+      <div id="step1">
+        <div class="field-row">
+          <div class="field">
+            <label>Nama Formula</label>
+            <input type="text" id="f-nama" placeholder="HI LO TEEN CHOCOLATE"/>
+          </div>
+          <div class="field">
+            <label>Kode Formula</label>
+            <input type="text" id="f-kode" placeholder="2H0401L_PLE1.0"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Revisi Formula</label>
+            <input type="text" id="f-revisi" placeholder="E2-EZ"/>
+          </div>
+          <div class="field">
+            <label>Revisi Operasional</label>
+            <input type="text" id="f-revisiop" placeholder="(opsional)"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Tanggal Berlaku</label>
+            <input type="date" id="f-tgl"/>
+          </div>
+          <div class="field">
+            <label>Lokasi Plant</label>
+            <input type="text" id="f-plant" value="CIBITUNG"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Lini Proses</label>
+          <input type="text" id="f-lini" placeholder="PLE Mixing - PLE"/>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Batch Ratio</label>
+            <input type="text" id="f-ratio" placeholder="1.00 (Utuh)"/>
+          </div>
+          <div class="field">
+            <label>Total Batch Size</label>
+            <input type="text" id="f-size" placeholder="603000000"/>
+          </div>
+          <div class="field">
+            <label>Satuan</label>
+            <select id="f-unit">
+              <option value="g">gram (g)</option>
+              <option value="kg">kilogram (kg)</option>
+              <option value="L">Liter (L)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: BAHAN BAKU -->
+      <div id="step2" style="display:none;">
+        <div class="sub-tabs">
+          <button class="sub-tab active" data-section="utuh">A · Bahan Baku Utuh</button>
+          <button class="sub-tab" data-section="koma">B · Bahan Baku Koma</button>
+          <button class="sub-tab" data-section="premix">C · Premix</button>
+        </div>
+
+        <div id="sec-utuh" class="sub-section active">
+          <div id="rows-utuh"></div>
+          <button class="btn-add-row" data-section="utuh">+ Tambah Baris (Utuh)</button>
+        </div>
+        <div id="sec-koma" class="sub-section">
+          <div id="rows-koma"></div>
+          <button class="btn-add-row" data-section="koma">+ Tambah Baris (Koma)</button>
+        </div>
+        <div id="sec-premix" class="sub-section">
+          <div id="rows-premix"></div>
+          <button class="btn-add-row" data-section="premix">+ Tambah Baris (Premix)</button>
+        </div>
+      </div>
+
+      <div class="msg" id="formulaMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sec" id="formulaBack" style="display:none;">← Kembali</button>
+      <button class="btn-sec" id="closeFormula2">Batal</button>
+      <button class="btn-primary" id="formulaNext">Lanjut →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD WO -->
+<div class="overlay" id="overlayWO">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">Buat Work Order</div>
+      <button class="modal-close" id="closeWO">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label>No. WO</label>
+          <input type="text" id="wo-no" placeholder="268"/>
+        </div>
+        <div class="field">
+          <label>No. Batch</label>
+          <input type="text" id="wo-batch" placeholder="(opsional)"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Formula / Produk</label>
+        <select id="wo-formula">
+          <option value="">-- Pilih Formula --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="wo-tgl"/>
+      </div>
+      <div class="field-row-3">
+        <div class="field">
+          <label>Group Lokasi 1</label>
+          <input type="text" id="wo-lok1" placeholder="R. Mixing"/>
+        </div>
+        <div class="field">
+          <label>Group Lokasi 2</label>
+          <input type="text" id="wo-lok2" placeholder="(opsional)"/>
+        </div>
+        <div class="field">
+          <label>Group Lokasi 3</label>
+          <input type="text" id="wo-lok3" placeholder="(opsional)"/>
+        </div>
+      </div>
+      <div class="msg" id="woMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sec" id="closeWO2">Batal</button>
+      <button class="btn-primary" id="saveWO">Buat WO + Label</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT PDF -->
+<div class="overlay" id="overlayImportPDF">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title">📄 Import Formula dari PDF PPIC</div>
+      <button class="modal-close" id="closeImportPDF">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- STEP A: UPLOAD -->
+      <div id="importStep-upload">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">📂</div>
+          <div class="dropzone-text">Drop file PDF PPIC di sini</div>
+          <div class="dropzone-sub">atau klik untuk pilih file</div>
+          <input type="file" id="pdfFileInput" accept=".pdf" style="display:none"/>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;">
+          Sistem akan otomatis membaca nama formula, kode, tanggal, batch size, dan daftar bahan baku.
+        </div>
+      </div>
+
+      <!-- STEP B: PARSING -->
+      <div id="importStep-parsing" style="display:none;">
+        <div style="text-align:center;padding:30px 0;">
+          <div style="font-size:32px;margin-bottom:12px;">⚙️</div>
+          <div style="font-size:13px;color:var(--muted);" id="parseStatusText">Membaca PDF...</div>
+        </div>
+        <div class="parse-log" id="parseLog"></div>
+      </div>
+
+      <!-- STEP C: PREVIEW -->
+      <div id="importStep-preview" style="display:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:18px;">✅</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;">Berhasil dibaca!</div>
+            <div style="font-size:11px;color:var(--muted);">Periksa data berikut sebelum diimpor ke sistem.</div>
+          </div>
+        </div>
+
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Info Formula</div>
+        <div class="preview-grid" id="previewHeader"></div>
+
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:12px 0 8px;">Bahan Baku Terdeteksi</div>
+        <div id="previewBB" style="max-height:240px;overflow-y:auto;"></div>
+
+        <div class="msg" id="importMsg"></div>
+      </div>
+
+      <!-- STEP D: ERROR -->
+      <div id="importStep-error" style="display:none;text-align:center;padding:30px 0;">
+        <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+        <div style="font-size:13px;color:var(--error);" id="importErrText">Gagal membaca PDF.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Coba upload ulang atau input manual.</div>
+      </div>
+
+    </div>
+    <div class="modal-footer" id="importFooter">
+      <button class="btn-sec" id="importReset">🔄 Upload Ulang</button>
+      <button class="btn-primary" id="importApply" style="display:none;">✅ Import ke Formulir</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT LABEL OVERLAY -->
+<div class="print-overlay" id="printOverlay">
+  <div class="label-card" id="labelCard">
+    <div class="lbl-brand">PT Nutrifood Indonesia</div>
+    <div class="lbl-doc">Dokumen Serah Terima BB</div>
+    <div id="qr-container" style="margin:10px auto;"></div>
+    <div class="lbl-wo" id="lbl-wo-no">-</div>
+    <div class="lbl-product" id="lbl-wo-product">-</div>
+    <div class="lbl-date" id="lbl-wo-date">-</div>
+  </div>
+  <div class="print-btns">
+    <button class="btn-print" id="doPrint">🖨 PRINT LABEL</button>
+    <button class="btn-close-p" id="closePrint">Tutup</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }       from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+                               from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp }
+                               from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBK8eNz6lYGT9dI5b01sCPdRFHBU8_i_40",
+  authDomain:"gudang-cibitung.firebaseapp.com",
+  projectId:"gudang-cibitung",
+  storageBucket:"gudang-cibitung.firebasestorage.app",
+  messagingSenderId:"570827859176",
+  appId:"1:570827859176:web:ccefaeeb0b964bd39dd55d"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── PDF.js setup ─────────────────────────────────────────────
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// ── Auth guard ───────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  loadFormulas();
+  loadWOs();
+});
+
+// ── PDF IMPORT ───────────────────────────────────────────────
+let parsedPDFData = null;
+
+document.getElementById('btnImportPDF').addEventListener('click', () => {
+  parsedPDFData = null;
+  showImportStep('upload');
+  document.getElementById('importApply').style.display = 'none';
+  document.getElementById('overlayImportPDF').classList.add('open');
+});
+document.getElementById('closeImportPDF').addEventListener('click', () => {
+  document.getElementById('overlayImportPDF').classList.remove('open');
+});
+document.getElementById('importReset').addEventListener('click', () => {
+  parsedPDFData = null;
+  document.getElementById('pdfFileInput').value = '';
+  document.getElementById('parseLog').innerHTML = '';
+  showImportStep('upload');
+  document.getElementById('importApply').style.display = 'none';
+});
+
+// Dropzone interactions
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('pdfFileInput');
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') processPDF(file);
+  else logParse('❌ File harus berformat PDF.', 'err');
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) processPDF(fileInput.files[0]);
+});
+
+// Import apply button
+document.getElementById('importApply').addEventListener('click', () => {
+  if (!parsedPDFData) return;
+  applyParsedData(parsedPDFData);
+  document.getElementById('overlayImportPDF').classList.remove('open');
+  openFormulaModal(true); // open with pre-filled data
+});
+
+function showImportStep(step) {
+  ['upload','parsing','preview','error'].forEach(s => {
+    document.getElementById('importStep-' + s).style.display = s === step ? 'block' : 'none';
+  });
+}
+
+function logParse(msg, type = '') {
+  const log = document.getElementById('parseLog');
+  const line = document.createElement('div');
+  line.className = type;
+  line.textContent = msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function processPDF(file) {
+  showImportStep('parsing');
+  document.getElementById('parseLog').innerHTML = '';
+  document.getElementById('parseStatusText').textContent = 'Membaca PDF...';
+  logParse('📄 File: ' + file.name);
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    logParse('⏳ Memuat PDF.js parser...');
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    logParse('✅ PDF dimuat · ' + pdf.numPages + ' halaman', 'ok');
+
+    // Extract all text with positions from all pages
+    let allItems = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      document.getElementById('parseStatusText').textContent = `Membaca halaman ${p}/${pdf.numPages}...`;
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const vp = page.getViewport({ scale: 1 });
+      // Normalize Y position (pdf Y is bottom-up, convert to top-down)
+      content.items.forEach(item => {
+        allItems.push({
+          text: item.str.trim(),
+          x: Math.round(item.transform[4]),
+          y: Math.round(vp.height - item.transform[5]),
+          page: p,
+        });
+      });
+    }
+    logParse('✅ Total ' + allItems.length + ' elemen teks ditemukan', 'ok');
+
+    // Build full text for header parsing
+    const fullText = allItems.map(i => i.text).join(' ');
+    document.getElementById('parseStatusText').textContent = 'Mengekstrak data...';
+
+    // ── Parse header fields ────────────────────────────────
+    logParse('⏳ Mengekstrak info formula...');
+    const parsed = {};
+
+    // Nama Formula Baku
+    const namaMatch = fullText.match(/Nama Formula Baku\s*:?\s*([A-Z0-9 \-\/]+?)(?=Kode Formula|NFI|No\.|$)/i);
+    parsed.namaFormula = namaMatch ? namaMatch[1].trim().replace(/\s+/g,' ') : '';
+
+    // Kode Formula
+    const kodeMatch = fullText.match(/([A-Z0-9]+_[A-Z0-9]+\.[0-9]+)/);
+    parsed.kodeFormula = kodeMatch ? kodeMatch[1] : '';
+
+    // Revisi Formula (E2-EZ pattern)
+    const revisiMatch = fullText.match(/([A-Z]\d+[-–][A-Z]+)/);
+    parsed.revisiFormula = revisiMatch ? revisiMatch[1] : '';
+
+    // Tanggal (DD/MM/YYYY)
+    const tglMatch = fullText.match(/(\d{2}\/\d{2}\/\d{4})/);
+    if (tglMatch) {
+      const [d,m,y] = tglMatch[1].split('/');
+      parsed.tanggal = `${y}-${m}-${d}`;
+    } else { parsed.tanggal = ''; }
+
+    // Plant
+    const plantMatch = fullText.match(/Lokasi Plant\s*:?\s*([A-Z]+)/);
+    parsed.plant = plantMatch ? plantMatch[1] : 'CIBITUNG';
+
+    // Lini Proses
+    const liniMatch = fullText.match(/Lini Proses\s*:?\s*([A-Za-z0-9 \-]+?)(?=Batch|Tanggal|$)/);
+    parsed.liniProses = liniMatch ? liniMatch[1].trim() : '';
+
+    // Batch Size
+    const batchMatch = fullText.match(/(\d[\d\.,]+(?:\.\d+)?)\s*g\b/);
+    parsed.batchSize = batchMatch ? batchMatch[1].replace(/\./g,'').replace(',','.') : '';
+    parsed.batchUnit = 'g';
+
+    // Batch Ratio
+    const ratioMatch = fullText.match(/(\d[,\.]\d+)\s*\(Utuh\)/i);
+    parsed.batchRatio = ratioMatch ? ratioMatch[1] : '1.00';
+
+    logParse('✅ Info formula: ' + (parsed.namaFormula || '(tidak terdeteksi)'), parsed.namaFormula ? 'ok' : 'warn');
+    logParse('   Kode: ' + (parsed.kodeFormula || '-') + ' · Rev: ' + (parsed.revisiFormula || '-'));
+    logParse('   Tgl: ' + (tglMatch ? tglMatch[1] : '-') + ' · Plant: ' + parsed.plant);
+    logParse('   Batch Size: ' + (parsed.batchSize || '-') + ' g');
+
+    // ── Parse Bahan Baku table ─────────────────────────────
+    logParse('⏳ Mengekstrak tabel bahan baku...');
+    document.getElementById('parseStatusText').textContent = 'Parsing tabel bahan baku...';
+
+    // Group text items by approximate Y position (rows)
+    // Items within 6px Y difference → same row
+    const rowMap = {};
+    allItems.filter(i => i.text.length > 0).forEach(item => {
+      const rowKey = Math.round(item.y / 6) * 6;
+      if (!rowMap[rowKey]) rowMap[rowKey] = [];
+      rowMap[rowKey].push(item);
+    });
+
+    // Sort rows by Y position
+    const rows = Object.entries(rowMap)
+      .sort((a,b) => parseInt(a[0]) - parseInt(b[0]))
+      .map(([y, items]) => ({
+        y: parseInt(y),
+        texts: items.sort((a,b) => a.x - b.x).map(i => i.text).filter(t => t),
+        items,
+      }));
+
+    // Find section boundaries
+    let utuhStart = -1, komaStart = -1, premixStart = -1, komaEnd = rows.length;
+    rows.forEach((row, idx) => {
+      const line = row.texts.join(' ').toLowerCase();
+      if (line.includes('bahan baku utuh') || line.includes('a. bahan')) utuhStart = idx;
+      if (line.includes('bahan baku koma') || line.includes('b. bahan')) { komaStart = idx; if (utuhStart > -1) komaEnd = idx; }
+      if (line.includes('premix') || line.includes('c. premix') || line.includes('c.bahan')) premixStart = idx;
+    });
+
+    logParse('   Section Utuh mulai baris: ' + utuhStart);
+    logParse('   Section Koma mulai baris: ' + komaStart);
+
+    parsed.utuh   = parseBBSection(rows, utuhStart, komaStart > utuhStart ? komaStart : rows.length);
+    parsed.koma   = parseBBSection(rows, komaStart, premixStart > komaStart ? premixStart : rows.length);
+    parsed.premix = premixStart > -1 ? parseBBSection(rows, premixStart, rows.length) : [];
+
+    logParse('✅ Bahan Baku Utuh: ' + parsed.utuh.length + ' baris', 'ok');
+    logParse('✅ Bahan Baku Koma: ' + parsed.koma.length + ' baris', 'ok');
+    logParse('✅ Premix: ' + parsed.premix.length + ' baris', parsed.premix.length ? 'ok' : 'warn');
+
+    parsedPDFData = parsed;
+    renderPreview(parsed);
+    showImportStep('preview');
+    document.getElementById('importApply').style.display = 'inline-flex';
+    document.getElementById('parseStatusText').textContent = 'Selesai!';
+
+  } catch(e) {
+    document.getElementById('importErrText').textContent = 'Gagal membaca PDF: ' + e.message;
+    showImportStep('error');
+    console.error(e);
+  }
+}
+
+function parseBBSection(rows, startIdx, endIdx) {
+  if (startIdx < 0) return [];
+  const section = rows.slice(startIdx + 1, endIdx);
+  const bbRows  = [];
+  let currentRow = null;
+
+  section.forEach(row => {
+    const texts = row.texts;
+    if (!texts.length) return;
+
+    // Skip header row (No, Cek Gudang Baku, etc.)
+    const joined = texts.join(' ').toLowerCase();
+    if (joined.includes('cek gudang') || joined.includes('jumlah') ||
+        joined.includes('tanggal') || joined.includes('warehouse') ||
+        joined.includes('produksi dept') || joined.includes('[copy')) return;
+
+    // Check if first text is a number → new row
+    const firstNum = texts[0].match(/^\d+$/);
+    if (firstNum) {
+      if (currentRow) bbRows.push(currentRow);
+      // Find quantity (last item that looks like a number, and UOM)
+      const qty   = findQty(texts);
+      const names = texts.filter(t => !t.match(/^\d+$/) && !isUOM(t) && t.length > 2 && t !== qty.val);
+      currentRow = {
+        no:     parseInt(firstNum[0]),
+        alts:   names.map((n, i) => ({ id: `r${firstNum[0]}_a${i+1}`, kode: '', nama: n })),
+        jumlah: qty.val,
+        uom:    qty.uom,
+      };
+    } else if (currentRow) {
+      // Alternative BB or continuation
+      const names = texts.filter(t => !t.match(/^\d+$/) && !isUOM(t) && t.length > 2);
+      const qty   = findQty(texts);
+      if (!currentRow.jumlah && qty.val) { currentRow.jumlah = qty.val; currentRow.uom = qty.uom; }
+      names.forEach((n, i) => {
+        // Avoid duplicates
+        if (!currentRow.alts.find(a => a.nama === n)) {
+          currentRow.alts.push({ id: `r${currentRow.no}_a${currentRow.alts.length+1}`, kode: '', nama: n });
+        }
+      });
+    }
+  });
+  if (currentRow) bbRows.push(currentRow);
+  return bbRows;
+}
+
+function findQty(texts) {
+  const uoms = ['SAK','BAL','KANTONG','KG','GRAM','PCS','BOTOL','BOX','DRUM','JERIGEN','BAG'];
+  for (let i = 0; i < texts.length; i++) {
+    const t = texts[i].toUpperCase();
+    if (uoms.includes(t) && i > 0) {
+      const numT = texts[i-1];
+      if (numT.match(/^[\d\.,]+$/)) return { val: numT, uom: t };
+    }
+    // "8 SAK" combined
+    const m = t.match(/^([\d\.,]+)\s*(SAK|BAL|KANTONG|KG|BAG|PCS|BOX)$/);
+    if (m) return { val: m[1], uom: m[2] };
+  }
+  // Look for standalone number that could be qty
+  for (let i = texts.length - 1; i >= 0; i--) {
+    if (texts[i].match(/^[\d]+$/) && parseInt(texts[i]) < 1000) return { val: texts[i], uom: '' };
+  }
+  return { val: '', uom: '' };
+}
+
+function isUOM(t) {
+  return ['SAK','BAL','KANTONG','KG','GRAM','PCS','BOTOL','BOX','DRUM','JERIGEN','BAG'].includes(t.toUpperCase());
+}
+
+function renderPreview(data) {
+  // Header preview
+  document.getElementById('previewHeader').innerHTML = [
+    { label: 'Nama Formula', val: data.namaFormula || '-' },
+    { label: 'Kode Formula', val: data.kodeFormula || '-' },
+    { label: 'Revisi', val: data.revisiFormula || '-' },
+    { label: 'Tanggal', val: data.tanggal || '-' },
+    { label: 'Plant', val: data.plant || '-' },
+    { label: 'Lini Proses', val: data.liniProses || '-' },
+    { label: 'Batch Size', val: (data.batchSize || '-') + ' g' },
+    { label: 'Batch Ratio', val: data.batchRatio || '-' },
+  ].map(f => `
+    <div class="preview-field">
+      <div class="preview-label">${f.label}</div>
+      <div class="preview-val">${f.val}</div>
+    </div>
+  `).join('');
+
+  // BB preview
+  const bbHtml = (title, rows) => `
+    <div class="bb-preview-section">
+      <div class="bb-preview-title">${title} (${rows.length} baris)</div>
+      ${rows.slice(0,8).map(r => `
+        <div class="bb-preview-row">
+          <span class="bb-preview-no">${r.no}</span>
+          <span class="bb-preview-qty">${r.jumlah || '?'} ${r.uom || ''}</span>
+          ${r.alts.map(a => `<span class="bb-preview-alt">▸ ${a.nama}</span>`).join('')}
+        </div>
+      `).join('')}
+      ${rows.length > 8 ? `<div style="font-size:11px;color:var(--muted);padding:4px 0;">...dan ${rows.length-8} baris lainnya</div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('previewBB').innerHTML =
+    bbHtml('A · Bahan Baku Utuh', data.utuh) +
+    bbHtml('B · Bahan Baku Koma', data.koma) +
+    (data.premix.length ? bbHtml('C · Premix', data.premix) : '');
+}
+
+// Apply parsed data to formula form state
+function applyParsedData(data) {
+  // Store in temp so openFormulaModal can use it
+  window._importedFormulaData = data;
+}
+
+// Modified openFormulaModal to support pre-fill
+const _origOpenFormulaModal = window.openFormulaModal;
+
+// ── State ────────────────────────────────────────────────────
+let formulaList = [];
+let woList = [];
+let currentStep = 1;
+let currentSubTab = 'utuh';
+let bbData = { utuh:[], koma:[], premix:[] };
+let rowCounters = { utuh:0, koma:0, premix:0 };
+
+// ── Tab navigation ───────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Sub-tabs (utuh/koma/premix) ──────────────────────────────
+document.querySelectorAll('.sub-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSubTab = btn.dataset.section;
+    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sub-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-' + currentSubTab).classList.add('active');
+  });
+});
+
+// ── FORMULA MODAL ────────────────────────────────────────────
+function openFormulaModal(fromImport = false) {
+  currentStep = 1;
+  bbData = { utuh:[], koma:[], premix:[] };
+  rowCounters = { utuh:0, koma:0, premix:0 };
+  document.getElementById('rows-utuh').innerHTML = '';
+  document.getElementById('rows-koma').innerHTML = '';
+  document.getElementById('rows-premix').innerHTML = '';
+
+  const imp = fromImport && window._importedFormulaData;
+
+  document.getElementById('f-nama').value   = imp ? (imp.namaFormula  || '') : '';
+  document.getElementById('f-kode').value   = imp ? (imp.kodeFormula  || '') : '';
+  document.getElementById('f-revisi').value = imp ? (imp.revisiFormula|| '') : '';
+  document.getElementById('f-revisiop').value = '';
+  document.getElementById('f-tgl').value    = imp ? (imp.tanggal      || '') : '';
+  document.getElementById('f-plant').value  = imp ? (imp.plant        || 'CIBITUNG') : 'CIBITUNG';
+  document.getElementById('f-lini').value   = imp ? (imp.liniProses   || '') : '';
+  document.getElementById('f-ratio').value  = imp ? (imp.batchRatio   || '') : '';
+  document.getElementById('f-size').value   = imp ? (imp.batchSize    || '') : '';
+  document.getElementById('f-unit').value   = imp ? (imp.batchUnit    || 'g') : 'g';
+
+  // Pre-fill bahan baku dari import
+  if (imp) {
+    ['utuh','koma','premix'].forEach(sec => {
+      const rows = imp[sec] || [];
+      rows.forEach(row => {
+        rowCounters[sec]++;
+        const newRow = {
+          id: `${sec}_${rowCounters[sec]}`,
+          no: row.no || (bbData[sec].length + 1),
+          alts: row.alts.length ? row.alts : [{ id: `${sec}_${rowCounters[sec]}_a1`, kode:'', nama:'' }],
+          jumlah: row.jumlah || '',
+          uom: row.uom || '',
+        };
+        bbData[sec].push(newRow);
+      });
+      if (bbData[sec].length) renderRows(sec);
+    });
+    document.getElementById('formulaModalTitle').textContent = '✅ Formula dari PDF — Periksa & Simpan';
+  } else {
+    document.getElementById('formulaModalTitle').textContent = 'Tambah Formula';
+    window._importedFormulaData = null;
+  }
+
+  showStep(1);
+  showMsg('formulaMsg','','');
+  document.getElementById('overlayFormula').classList.add('open');
+}
+
+function closeFormulaModal() {
+  document.getElementById('overlayFormula').classList.remove('open');
+}
+
+function showStep(step) {
+  currentStep = step;
+  document.getElementById('step1').style.display = step === 1 ? 'block' : 'none';
+  document.getElementById('step2').style.display = step === 2 ? 'block' : 'none';
+  document.getElementById('formulaBack').style.display = step === 2 ? 'inline-flex' : 'none';
+  document.getElementById('formulaNext').textContent = step === 1 ? 'Lanjut →' : '💾 Simpan Formula';
+  document.querySelectorAll('.step').forEach(s => {
+    const n = parseInt(s.dataset.step);
+    s.classList.toggle('active', n === step);
+    s.classList.toggle('done', n < step);
+  });
+}
+
+document.getElementById('btnAddFormula').addEventListener('click', openFormulaModal);
+document.getElementById('closeFormula').addEventListener('click', closeFormulaModal);
+document.getElementById('closeFormula2').addEventListener('click', closeFormulaModal);
+document.getElementById('formulaBack').addEventListener('click', () => showStep(1));
+
+document.getElementById('formulaNext').addEventListener('click', async () => {
+  if (currentStep === 1) {
+    const nama = document.getElementById('f-nama').value.trim();
+    const kode = document.getElementById('f-kode').value.trim();
+    if (!nama || !kode) { showMsg('formulaMsg','Nama dan kode formula wajib diisi.','error'); return; }
+    showMsg('formulaMsg','','');
+    showStep(2);
+  } else {
+    await saveFormula();
+  }
+});
+
+// ── ADD ROW (event delegation on modal body) ─────────────────
+document.getElementById('overlayFormula').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  // Add row
+  if (btn.classList.contains('btn-add-row')) {
+    addBBRow(btn.dataset.section);
+    return;
+  }
+  // Add alternative
+  if (btn.classList.contains('btn-add-alt')) {
+    addAlt(btn.dataset.rowid, btn.dataset.section);
+    return;
+  }
+  // Remove alt
+  if (btn.classList.contains('alt-rem')) {
+    removeAlt(btn.dataset.rowid, btn.dataset.altid, btn.dataset.section);
+    return;
+  }
+  // Delete row
+  if (btn.classList.contains('bb-del')) {
+    delRow(btn.dataset.rowid, btn.dataset.section);
+    return;
+  }
+});
+
+function addBBRow(section) {
+  rowCounters[section]++;
+  const rowId = `${section}_${rowCounters[section]}`;
+  const no    = bbData[section].length + 1;
+  const row   = { id: rowId, no, alts:[{ id: rowId+'_a1', kode:'', nama:'' }], jumlah:'', uom:'' };
+  bbData[section].push(row);
+  renderRows(section);
+}
+
+function addAlt(rowId, section) {
+  const row = bbData[section].find(r => r.id === rowId);
+  if (!row) return;
+  const altId = rowId + '_a' + (row.alts.length + 1) + '_' + Date.now();
+  row.alts.push({ id: altId, kode:'', nama:'' });
+  renderRows(section);
+}
+
+function removeAlt(rowId, altId, section) {
+  const row = bbData[section].find(r => r.id === rowId);
+  if (!row || row.alts.length <= 1) return;
+  row.alts = row.alts.filter(a => a.id !== altId);
+  renderRows(section);
+}
+
+function delRow(rowId, section) {
+  bbData[section] = bbData[section].filter(r => r.id !== rowId);
+  bbData[section].forEach((r,i) => r.no = i+1);
+  renderRows(section);
+}
+
+function collectInputs(section) {
+  bbData[section].forEach(row => {
+    row.alts.forEach(alt => {
+      const kodeEl = document.getElementById('kode_'+alt.id);
+      const namaEl = document.getElementById('nama_'+alt.id);
+      if (kodeEl) alt.kode = kodeEl.value.trim();
+      if (namaEl) alt.nama = namaEl.value.trim();
+    });
+    const jEl = document.getElementById('jumlah_'+row.id);
+    const uEl = document.getElementById('uom_'+row.id);
+    if (jEl) row.jumlah = jEl.value.trim();
+    if (uEl) row.uom = uEl.value.trim();
+  });
+}
+
+function renderRows(section) {
+  collectInputs(section);
+  const container = document.getElementById('rows-' + section);
+  if (!bbData[section].length) { container.innerHTML = ''; return; }
+  container.innerHTML = bbData[section].map(row => `
+    <div class="bb-row">
+      <div class="bb-row-top">
+        <span class="bb-no">${row.no}</span>
+        <small style="color:var(--muted);font-size:11px;">Bahan Baku (klik + untuk alternatif)</small>
+        <button class="bb-del" data-rowid="${row.id}" data-section="${section}" title="Hapus baris">✕</button>
+      </div>
+      ${row.alts.map(alt => `
+        <div class="alt-item">
+          <input class="alt-input" id="kode_${alt.id}" placeholder="Kode" value="${alt.kode}"/>
+          <input class="alt-input wide" id="nama_${alt.id}" placeholder="Nama Bahan Baku" value="${alt.nama}"/>
+          <button class="alt-rem" data-rowid="${row.id}" data-altid="${alt.id}" data-section="${section}" title="Hapus">✕</button>
+        </div>
+      `).join('')}
+      <button class="btn-add-alt" data-rowid="${row.id}" data-section="${section}">+ Tambah Alternatif</button>
+      <div class="qty-row">
+        <input class="alt-input" id="jumlah_${row.id}" placeholder="Jumlah" value="${row.jumlah}" style="text-align:center;"/>
+        <input class="alt-input wide" id="uom_${row.id}" placeholder="Satuan (SAK, BAL, KANTONG...)" value="${row.uom}"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveFormula() {
+  ['utuh','koma','premix'].forEach(s => collectInputs(s));
+  const btn = document.getElementById('formulaNext');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const data = {
+      namaFormula: document.getElementById('f-nama').value.trim(),
+      kodeFormula: document.getElementById('f-kode').value.trim(),
+      revisiFormula: document.getElementById('f-revisi').value.trim(),
+      revisiOp: document.getElementById('f-revisiop').value.trim(),
+      tanggalBerlaku: document.getElementById('f-tgl').value,
+      plant: document.getElementById('f-plant').value.trim(),
+      liniProses: document.getElementById('f-lini').value.trim(),
+      batchRatio: document.getElementById('f-ratio').value.trim(),
+      batchSize: document.getElementById('f-size').value.trim(),
+      batchUnit: document.getElementById('f-unit').value,
+      utuh:   bbData.utuh,
+      koma:   bbData.koma,
+      premix: bbData.premix,
+      createdAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, 'formulas'), data);
+    showMsg('formulaMsg','✅ Formula berhasil disimpan!','success');
+    setTimeout(() => { closeFormulaModal(); loadFormulas(); }, 1000);
+  } catch(e) {
+    showMsg('formulaMsg','Gagal menyimpan: ' + e.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Simpan Formula';
+  }
+}
+
+// ── LOAD FORMULAS ────────────────────────────────────────────
+async function loadFormulas() {
+  const grid = document.getElementById('formulaGrid');
+  try {
+    const snap = await getDocs(collection(db, 'formulas'));
+    formulaList = [];
+    snap.forEach(d => formulaList.push({ id: d.id, ...d.data() }));
+    if (!formulaList.length) {
+      grid.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Belum ada formula. Klik "+ Tambah Formula".</div></div>`;
+      return;
+    }
+    grid.innerHTML = formulaList.map(f => `
+      <div class="formula-card">
+        <div class="card-actions">
+          <button class="icon-btn del" data-id="${f.id}" title="Hapus">🗑</button>
+        </div>
+        <div class="fc-name">${f.namaFormula}</div>
+        <div class="fc-code">${f.kodeFormula} · Rev: ${f.revisiFormula || '-'}</div>
+        <div class="fc-chips">
+          <span class="chip">${f.plant || 'CIBITUNG'}</span>
+          <span class="chip">${f.liniProses || '-'}</span>
+          <span class="chip">Utuh: ${(f.utuh||[]).length} baris</span>
+          <span class="chip">Koma: ${(f.koma||[]).length} baris</span>
+        </div>
+      </div>
+    `).join('');
+
+    // delete handlers
+    grid.querySelectorAll('.icon-btn.del').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (!confirm('Hapus formula ini?')) return;
+        await deleteDoc(doc(db, 'formulas', btn.dataset.id));
+        loadFormulas();
+      });
+    });
+
+    // populate WO formula dropdown
+    const sel = document.getElementById('wo-formula');
+    sel.innerHTML = '<option value="">-- Pilih Formula --</option>';
+    formulaList.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.namaFormula + ' (' + f.kodeFormula + ')';
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Gagal memuat formula.</div></div>`;
+  }
+}
+
+// ── WO MODAL ─────────────────────────────────────────────────
+document.getElementById('btnAddWO').addEventListener('click', () => {
+  ['wo-no','wo-batch','wo-lok1','wo-lok2','wo-lok3'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('wo-formula').value = '';
+  document.getElementById('wo-tgl').value = new Date().toISOString().split('T')[0];
+  showMsg('woMsg','','');
+  document.getElementById('overlayWO').classList.add('open');
+});
+document.getElementById('closeWO').addEventListener('click', () => document.getElementById('overlayWO').classList.remove('open'));
+document.getElementById('closeWO2').addEventListener('click', () => document.getElementById('overlayWO').classList.remove('open'));
+
+document.getElementById('saveWO').addEventListener('click', async () => {
+  const noWO    = document.getElementById('wo-no').value.trim();
+  const fId     = document.getElementById('wo-formula').value;
+  const tgl     = document.getElementById('wo-tgl').value;
+  const btn     = document.getElementById('saveWO');
+
+  if (!noWO || !fId || !tgl) { showMsg('woMsg','No. WO, Formula, dan Tanggal wajib diisi.','error'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const formula = formulaList.find(f => f.id === fId);
+    const woData = {
+      noWO,
+      noBatch: document.getElementById('wo-batch').value.trim(),
+      formulaId: fId,
+      namaFormula: formula?.namaFormula || '-',
+      kodeFormula: formula?.kodeFormula || '-',
+      tanggal: tgl,
+      groupLokasi1: document.getElementById('wo-lok1').value.trim(),
+      groupLokasi2: document.getElementById('wo-lok2').value.trim(),
+      groupLokasi3: document.getElementById('wo-lok3').value.trim(),
+      status: 'pending',
+      createdAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, 'work_orders'), woData);
+    document.getElementById('overlayWO').classList.remove('open');
+    await loadWOs();
+    // Auto-show print label for new WO
+    openPrintLabel({ ...woData, id: 'new' });
+  } catch(e) {
+    showMsg('woMsg','Gagal membuat WO: ' + e.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Buat WO + Label';
+  }
+});
+
+// ── LOAD WOs ─────────────────────────────────────────────────
+async function loadWOs() {
+  const tbody = document.getElementById('woTableBody');
+  try {
+    const snap = await getDocs(query(collection(db, 'work_orders'), orderBy('createdAt','desc')));
+    woList = [];
+    snap.forEach(d => woList.push({ id: d.id, ...d.data() }));
+    if (!woList.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">Belum ada Work Order.</td></tr>';
+      return;
+    }
+    const statusMap = {
+      pending:          { label:'Menunggu',        cls:'s-pending' },
+      gudang_progress:  { label:'Cek Gudang',      cls:'s-gudang' },
+      gudang_approved:  { label:'Gudang ✓',        cls:'s-approved' },
+      produksi_progress:{ label:'Cek Produksi',    cls:'s-gudang' },
+      selesai:          { label:'Selesai',          cls:'s-selesai' },
+    };
+    tbody.innerHTML = woList.map(wo => {
+      const st = statusMap[wo.status] || { label: wo.status, cls:'s-pending' };
+      const tgl = wo.tanggal ? new Date(wo.tanggal).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '-';
+      return `
+        <tr>
+          <td><div class="wo-no">WO-${wo.noWO}</div>${wo.noBatch ? '<div class="wo-product">Batch: '+wo.noBatch+'</div>' : ''}</td>
+          <td><div style="font-size:13px;">${wo.namaFormula}</div><div class="wo-product">${wo.kodeFormula}</div></td>
+          <td style="font-size:12px;color:var(--text2);">${tgl}</td>
+          <td><span class="status-chip ${st.cls}">${st.label}</span></td>
+          <td>
+            <div class="td-actions">
+              <button class="icon-btn" data-wo='${JSON.stringify({noWO:wo.noWO,namaFormula:wo.namaFormula,tanggal:wo.tanggal})}' title="Print Label">🖨</button>
+              <button class="icon-btn del" data-id="${wo.id}" title="Hapus">🗑</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // print handlers
+    tbody.querySelectorAll('.icon-btn:not(.del)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wo = JSON.parse(btn.dataset.wo);
+        openPrintLabel(wo);
+      });
+    });
+
+    // delete handlers
+    tbody.querySelectorAll('.icon-btn.del').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Hapus WO ini?')) return;
+        await deleteDoc(doc(db, 'work_orders', btn.dataset.id));
+        loadWOs();
+      });
+    });
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--error);">Gagal memuat data.</td></tr>`;
+  }
+}
+
+// ── PRINT LABEL ───────────────────────────────────────────────
+let qrInstance = null;
+function openPrintLabel(wo) {
+  document.getElementById('lbl-wo-no').textContent = 'WO-' + wo.noWO;
+  document.getElementById('lbl-wo-product').textContent = wo.namaFormula;
+  const tgl = wo.tanggal ? new Date(wo.tanggal + 'T00:00:00').toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'}) : '-';
+  document.getElementById('lbl-wo-date').textContent = tgl;
+
+  const qrEl = document.getElementById('qr-container');
+  qrEl.innerHTML = '';
+  try {
+    qrInstance = new QRCode(qrEl, {
+      text: 'WO-' + wo.noWO,
+      width: 110, height: 110,
+      colorDark: '#000000', colorLight: '#ffffff',
+    });
+  } catch(e) { qrEl.textContent = 'WO-' + wo.noWO; }
+
+  document.getElementById('printOverlay').classList.add('open');
+}
+
+document.getElementById('closePrint').addEventListener('click', () => {
+  document.getElementById('printOverlay').classList.remove('open');
+});
+document.getElementById('doPrint').addEventListener('click', () => window.print());
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (type || '');
+}
+</script>
+</body>
+</html>
