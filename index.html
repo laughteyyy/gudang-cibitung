@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>My Penata</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --accent:#e8ff00;--accent-dim:rgba(232,255,0,0.07);
+  --text:#f0f0f0;--text2:#aaa;--muted:#555;
+  --error:#ff4444;--success:#00e676;
+  --penata:#b388ff;--penyelia:#e8ff00;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+body{display:flex;flex-direction:column;}
+
+/* ── BG GRID ── */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,0,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,0,0.025) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:0;}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:flex;flex-direction:column;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════ */
+#screenLogin{align-items:center;justify-content:center;padding:32px 20px;}
+
+.login-wrap{width:100%;max-width:360px;animation:fadeUp .4s ease both;}
+
+/* Logo */
+.logo-area{text-align:center;margin-bottom:36px;}
+.logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;margin:0 auto 14px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,255,0,.4)}50%{box-shadow:0 0 0 8px rgba(232,255,0,0)}}
+.logo-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:6px;color:var(--text);line-height:1;}
+.logo-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:6px;}
+
+/* Role picker */
+.role-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.role-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;}
+.role-btn{background:transparent;border:1px solid var(--border);border-radius:10px;padding:14px 8px;cursor:pointer;text-align:center;transition:all .2s;}
+.role-btn .r-icon{font-size:22px;display:block;margin-bottom:6px;}
+.role-btn .r-name{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;transition:color .2s;}
+.role-btn:hover{border-color:var(--border2);}
+.role-btn.active-penata{border-color:var(--penata);background:rgba(179,136,255,.06);box-shadow:0 0 20px rgba(179,136,255,.08);}
+.role-btn.active-penata .r-name{color:var(--penata);}
+.role-btn.active-penyelia{border-color:var(--penyelia);background:var(--accent-dim);box-shadow:0 0 20px rgba(232,255,0,.08);}
+.role-btn.active-penyelia .r-name{color:var(--penyelia);}
+
+/* Input card */
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;position:relative;overflow:hidden;}
+.input-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;}
+.input-card.has-role::before{opacity:.4;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;letter-spacing:2px;outline:none;transition:all .2s;}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,255,0,.05);}
+.field input::placeholder{color:#2a2a2a;letter-spacing:0;font-family:'DM Sans',sans-serif;font-size:13px;}
+.hint-box{background:rgba(179,136,255,.05);border:1px solid rgba(179,136,255,.1);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--muted);margin-top:6px;display:none;}
+.hint-box.show{display:block;}
+.btn-login{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;cursor:pointer;margin-top:4px;transition:all .2s;}
+.btn-login:hover{box-shadow:0 6px 24px rgba(232,255,0,.2);}
+.btn-login:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.err-msg{font-size:12px;color:var(--error);text-align:center;margin-top:12px;min-height:16px;}
+
+.footer-note{text-align:center;margin-top:20px;font-family:'DM Mono',monospace;font-size:10px;color:#222;letter-spacing:1px;}
+
+.spinner-sm{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════
+   DASHBOARD SCREEN
+══════════════════════════════ */
+#screenDash{padding:0;}
+
+.dash-header{padding:36px 20px 24px;text-align:center;border-bottom:1px solid var(--border);}
+.dash-greeting{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;margin-bottom:4px;}
+.dash-role-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;padding:4px 14px;border-radius:4px;text-transform:uppercase;margin-bottom:6px;}
+.tag-penata{color:var(--penata);background:rgba(179,136,255,.1);border:1px solid rgba(179,136,255,.2);}
+.tag-penyelia{color:var(--penyelia);background:var(--accent-dim);border:1px solid rgba(232,255,0,.15);}
+.dash-date{font-size:12px;color:var(--muted);}
+
+.dash-modules{padding:20px 16px 100px;}
+.modules-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--text);}
+.module-card:hover{border-color:rgba(232,255,0,.15);background:var(--surface2);transform:translateX(4px);}
+.module-icon{font-size:28px;width:44px;height:44px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.module-info{flex:1;}
+.module-name{font-size:15px;font-weight:600;margin-bottom:3px;}
+.module-desc{font-size:12px;color:var(--muted);}
+.module-arrow{color:var(--muted);font-size:16px;}
+
+.dash-footer{position:fixed;bottom:0;left:0;right:0;padding:14px 16px;background:rgba(10,10,10,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);}
+.btn-logout{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:11px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all .2s;max-width:400px;display:block;margin:0 auto;}
+.btn-logout:hover{border-color:var(--error);color:var(--error);}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div class="screen active" id="screenLogin">
+  <div class="login-wrap">
+    <div class="logo-area">
+      <div class="logo-dot"></div>
+      <div class="logo-title">MY PENATA</div>
+      <div class="logo-sub">Gudang Cibitung · PT Nutrifood</div>
+    </div>
+
+    <div class="role-label">Pilih Jabatan</div>
+    <div class="role-row">
+      <button class="role-btn" data-role="penata">
+        <span class="r-icon">📦</span>
+        <span class="r-name">Penata</span>
+      </button>
+      <button class="role-btn" data-role="penyelia">
+        <span class="r-icon">👔</span>
+        <span class="r-name">Penyelia</span>
+      </button>
+    </div>
+
+    <div class="input-card" id="inputCard">
+      <div class="field">
+        <label>NIK</label>
+        <input type="text" id="nikInput" inputmode="numeric" placeholder="Masukkan NIK" maxlength="20"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="passInput" placeholder="Masukkan password"/>
+        <div class="hint-box" id="hintBox">
+          💡 Password Penata = tanggal lahir<br>Format: DDMMYYYY · Contoh: 15031998
+        </div>
+      </div>
+      <button class="btn-login" id="btnLogin">MASUK</button>
+      <div class="err-msg" id="errMsg"></div>
+    </div>
+
+    <div class="footer-note">MY PENATA · v1.0 · CBB SYSTEM</div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div class="screen" id="screenDash">
+  <div class="dash-header">
+    <div class="dash-greeting" id="dashGreeting">Halo!</div>
+    <div class="dash-role-tag" id="dashRoleTag">-</div>
+    <div class="dash-date" id="dashDate">-</div>
+  </div>
+
+  <div class="dash-modules">
+    <div class="modules-label">Menu</div>
+    <div id="moduleList"></div>
+  </div>
+
+  <div class="dash-footer">
+    <button class="btn-logout" id="btnLogout">KELUAR</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                            from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, doc, getDoc }
+                            from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBK8eNz6lYGT9dI5b01sCPdRFHBU8_i_40",
+  authDomain:"gudang-cibitung.firebaseapp.com",
+  projectId:"gudang-cibitung",
+  storageBucket:"gudang-cibitung.firebasestorage.app",
+  messagingSenderId:"570827859176",
+  appId:"1:570827859176:web:ccefaeeb0b964bd39dd55d"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── MODULES per role ──────────────────────────────────────────
+const MODULES = {
+  penata: [
+    {icon:'🧹', name:'CBB',       desc:'Checklist Kebersihan Gudang', page:'cbb.html'},
+    {icon:'🌾', name:'Form Ayak', desc:'Checklist pengayakan bahan',  page:'ayak.html'},
+    {icon:'👟', name:'Form Sepatu',desc:'Checklist kebersihan sepatu', page:'sepatu.html'},
+  ],
+  penyelia: [
+    {icon:'🧹', name:'CBB',       desc:'Lihat & verifikasi checklist', page:'cbb.html'},
+    {icon:'🌾', name:'Form Ayak', desc:'Lihat & verifikasi',           page:'ayak.html'},
+    {icon:'👟', name:'Form Sepatu',desc:'Lihat & verifikasi',          page:'sepatu.html'},
+  ],
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let selectedRole = null;
+
+// ── AUTH STATE ────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { showScreen('screenLogin'); return; }
+  const snap = await getDoc(doc(db,'users', user.uid));
+  if (!snap.exists()) { await signOut(auth); return; }
+  const userData = { uid: user.uid, ...snap.data() };
+  // Only allow penata & penyelia
+  if (!['penata','penyelia'].includes(userData.role)) {
+    await signOut(auth);
+    setErr('Akun ini tidak memiliki akses ke My Penata.');
+    return;
+  }
+  showDashboard(userData);
+});
+
+// ── ROLE SELECTOR ─────────────────────────────────────────────
+document.querySelectorAll('.role-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedRole = btn.dataset.role;
+    document.querySelectorAll('.role-btn').forEach(b => {
+      b.className = 'role-btn';
+    });
+    btn.classList.add('active-' + selectedRole);
+    document.getElementById('inputCard').classList.add('has-role');
+    document.getElementById('hintBox').classList.toggle('show', selectedRole==='penata');
+    setErr('');
+  });
+});
+
+// ── LOGIN ─────────────────────────────────────────────────────
+const btnLogin = document.getElementById('btnLogin');
+btnLogin.addEventListener('click', doLogin);
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin() {
+  const nik  = document.getElementById('nikInput').value.trim();
+  const pass = document.getElementById('passInput').value.trim();
+  if (!selectedRole) { setErr('Pilih jabatan dulu.'); return; }
+  if (!nik || !pass) { setErr('NIK dan password tidak boleh kosong.'); return; }
+
+  btnLogin.disabled = true;
+  btnLogin.innerHTML = '<span class="spinner-sm"></span>';
+
+  try {
+    const email = `${nik}@gudang-cibitung.internal`;
+    const cred  = await signInWithEmailAndPassword(auth, email, pass);
+    const snap  = await getDoc(doc(db,'users', cred.user.uid));
+    if (!snap.exists() || snap.data().role !== selectedRole) {
+      await signOut(auth);
+      setErr('NIK, password, atau jabatan tidak sesuai.');
+    }
+    // onAuthStateChanged will handle navigation
+  } catch(e) {
+    const msgs = {
+      'auth/invalid-credential': 'NIK atau password salah.',
+      'auth/too-many-requests':  'Terlalu banyak percobaan, coba lagi nanti.',
+      'auth/network-request-failed': 'Tidak ada koneksi internet.',
+    };
+    setErr(msgs[e.code] || 'Login gagal. Coba lagi.');
+  } finally {
+    btnLogin.disabled = false;
+    btnLogin.innerHTML = 'MASUK';
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+function showDashboard(user) {
+  const firstName = (user.name||'').split(' ')[0] || 'Penata';
+  const role = user.role;
+
+  document.getElementById('dashGreeting').textContent = 'Halo, ' + firstName + '!';
+
+  const tag = document.getElementById('dashRoleTag');
+  tag.textContent = role === 'penata' ? 'Penata' : 'Penyelia';
+  tag.className = 'dash-role-tag tag-' + role;
+
+  const now = new Date();
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('dashDate').textContent =
+    days[now.getDay()] + ', ' +
+    now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+
+  const mods = MODULES[role] || [];
+  document.getElementById('moduleList').innerHTML = mods.map(m => `
+    <a class="module-card" href="${m.page}">
+      <div class="module-icon">${m.icon}</div>
+      <div class="module-info">
+        <div class="module-name">${m.name}</div>
+        <div class="module-desc">${m.desc}</div>
+      </div>
+      <span class="module-arrow">›</span>
+    </a>
+  `).join('');
+
+  showScreen('screenDash');
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────
+document.getElementById('btnLogout').addEventListener('click', async () => {
+  await signOut(auth);
+  selectedRole = null;
+  document.getElementById('nikInput').value = '';
+  document.getElementById('passInput').value = '';
+  document.querySelectorAll('.role-btn').forEach(b => b.className='role-btn');
+  document.getElementById('inputCard').classList.remove('has-role');
+  document.getElementById('hintBox').classList.remove('show');
+  setErr('');
+});
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function setErr(msg) {
+  document.getElementById('errMsg').textContent = msg;
+}
+</script>
+</body>
+</html>
