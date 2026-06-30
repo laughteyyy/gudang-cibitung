@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CBB — My Penata</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --accent:#e8ff00;--accent-dim:rgba(232,255,0,0.07);
+  --text:#f0f0f0;--text2:#aaa;--muted:#555;
+  --error:#ff4444;--success:#00e676;--warn:#ffb300;
+  --blue:#00cfff;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── TOP NAV ── */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-row1{display:flex;align-items:center;padding:0 14px;height:50px;gap:10px;}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);}
+.nav-sep{color:var(--border2);}
+.nav-page{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.nav-back{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;gap:5px;}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── DAY TABS ── */
+.day-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.day-tabs::-webkit-scrollbar{display:none;}
+.day-tab{flex:1;min-width:60px;padding:9px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;position:relative;}
+.day-tab.active{color:var(--accent);border-color:var(--accent);}
+.day-tab.today::after{content:'';position:absolute;top:6px;right:8px;width:5px;height:5px;background:var(--accent);border-radius:50%;}
+.day-tab.has-data{color:var(--text2);}
+.day-tab.has-data.done-all{color:var(--success);border-color:rgba(0,230,118,.3);}
+.day-date{display:block;font-size:10px;font-weight:600;margin-bottom:1px;}
+
+/* ── SECTION TABS ── */
+.sec-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;z-index:80;}
+.sec-tab{flex:1;padding:9px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .2s;}
+.sec-tab.active{color:var(--blue);border-color:var(--blue);}
+.sec-prog{display:block;font-size:12px;font-weight:700;margin-bottom:2px;}
+
+/* ── TOP AREA STICKY HEIGHT ── */
+.spacer{height:130px;}
+
+/* ── MAIN CONTENT ── */
+.content{padding:8px 10px 120px;}
+
+/* ── INFO BANNER ── */
+.week-info{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.week-info-left{font-size:12px;color:var(--muted);}
+.week-info-name{font-weight:600;color:var(--text);font-size:13px;}
+.status-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:4px;text-transform:uppercase;}
+.sb-draft{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.2);}
+.sb-submitted{background:rgba(0,207,255,.1);color:var(--blue);border:1px solid rgba(0,207,255,.2);}
+.sb-verified{background:rgba(0,230,118,.1);color:var(--success);border:1px solid rgba(0,230,118,.2);}
+.sb-empty{background:rgba(255,255,255,.03);color:var(--muted);border:1px solid var(--border);}
+
+/* ── ITEM CARDS ── */
+.item-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .2s;}
+.item-card.checked{border-left:3px solid var(--success);}
+.item-card.na{opacity:.45;}
+.item-header{display:flex;align-items:flex-start;gap:10px;padding:12px 12px 10px;}
+.item-no{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);min-width:28px;line-height:1;}
+.item-info{flex:1;}
+.item-area{font-size:13px;font-weight:600;margin-bottom:2px;}
+.item-objek{font-size:11px;color:var(--text2);margin-bottom:4px;}
+.item-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.badge-metode{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:3px;text-transform:uppercase;}
+.b-pel{background:rgba(0,207,255,.1);color:var(--blue);border:1px solid rgba(0,207,255,.2);}
+.b-wet{background:rgba(100,180,255,.1);color:#64b4ff;border:1px solid rgba(100,180,255,.2);}
+.b-dry{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.2);}
+.b-lap{background:rgba(179,136,255,.1);color:#b388ff;border:1px solid rgba(179,136,255,.2);}
+.badge-freq{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border);}
+.item-na-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;}
+
+/* big checkbox */
+.item-check-col{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.big-check{width:36px;height:36px;border:2px solid var(--border2);border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;flex-shrink:0;}
+.big-check.on{background:rgba(0,230,118,.1);border-color:var(--success);}
+.big-check:disabled{cursor:not-allowed;opacity:.4;}
+
+/* photo */
+.item-photo-row{padding:0 12px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.btn-photo{background:transparent;border:1px dashed var(--border2);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:11px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.btn-photo:hover{border-color:var(--warn);color:var(--warn);}
+.photo-thumb{width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;}
+.photo-remove{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);color:var(--error);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.photo-remove:hover{background:rgba(255,68,68,.2);}
+.photo-input{display:none;}
+
+/* ── SUB ITEMS (Penimbangan) ── */
+.sub-items{padding:0 12px 12px;}
+.sub-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.sub-item:last-child{border-bottom:none;}
+.sub-check{width:24px;height:24px;border:1.5px solid var(--border2);border-radius:5px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;flex-shrink:0;}
+.sub-check.on{background:rgba(0,230,118,.1);border-color:var(--success);}
+.sub-check:disabled{cursor:not-allowed;opacity:.4;}
+.sub-info{flex:1;}
+.sub-objek{font-size:12px;color:var(--text2);}
+.sub-param{font-size:10px;color:var(--muted);margin-top:1px;}
+.sub-photo-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;transition:color .2s;}
+.sub-photo-btn:hover{color:var(--warn);}
+.sub-photo-wrap{display:flex;align-items:center;gap:6px;padding:4px 0 4px 34px;}
+.sub-photo-thumb{width:40px;height:40px;border-radius:5px;object-fit:cover;border:1px solid var(--border);}
+
+/* ── FOOTER ── */
+.footer{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:10px 14px;display:none;}
+.footer.show{display:block;}
+.footer-inner{display:flex;gap:8px;max-width:600px;margin:0 auto;}
+.btn-save{flex:1;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-save:hover{border-color:var(--muted);}
+.btn-submit{flex:2;background:var(--accent);color:#000;border:none;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.btn-approve{width:100%;background:var(--success);color:#000;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-penyelia-view{width:100%;background:transparent;border:1px solid var(--blue);color:var(--blue);border-radius:8px;padding:11px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+
+/* ── LOADING ── */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);gap:12px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+.spinner-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:13px;z-index:300;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.toast.show{display:block;animation:fadeUp .2s ease both;}
+.toast.success{border-color:rgba(0,230,118,.3);color:var(--success);}
+.toast.error{border-color:rgba(255,68,68,.3);color:var(--error);}
+@keyframes fadeUp{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ── LIGHTBOX ── */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:400;display:none;align-items:center;justify-content:center;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:96%;max-height:90vh;border-radius:8px;}
+.lightbox-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;}
+
+/* ── CATATAN ── */
+.catatan-area{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;}
+.catatan-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.catatan-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:56px;transition:border-color .2s;}
+.catatan-input:focus{border-color:var(--accent);}
+
+/* EMPTY DAY */
+.empty-day{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-day-icon{font-size:40px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-row1">
+    <span class="nav-brand">MY PENATA</span>
+    <span class="nav-sep">|</span>
+    <span class="nav-page">CBB</span>
+    <a class="nav-back" href="index.html">← Kembali</a>
+  </div>
+  <!-- Day tabs -->
+  <div class="day-tabs" id="dayTabs"></div>
+</nav>
+
+<!-- LOADING -->
+<div class="loading" id="loadingWrap">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--muted);">Memuat...</div>
+</div>
+
+<!-- MAIN -->
+<div id="mainWrap" style="display:none;">
+  <div class="spacer"></div>
+
+  <!-- Section tabs (sticky below nav) -->
+  <div class="sec-tabs" id="secTabs" style="top:130px;">
+    <button class="sec-tab active" data-sec="storage">
+      <span class="sec-prog" id="prog-storage">-</span>
+      Storage
+    </button>
+    <button class="sec-tab" data-sec="timbang">
+      <span class="sec-prog" id="prog-timbang">-</span>
+      Penimbangan
+    </button>
+  </div>
+
+  <div class="content">
+    <!-- Week + status info -->
+    <div class="week-info">
+      <div class="week-info-left">
+        <div class="week-info-name" id="weekInfoName">-</div>
+        <div id="weekInfoSub" style="font-size:11px;color:var(--muted);">-</div>
+      </div>
+      <div class="status-badge sb-empty" id="statusBadge">Belum Diisi</div>
+    </div>
+
+    <!-- Storage section -->
+    <div id="sec-storage"></div>
+
+    <!-- Timbang section -->
+    <div id="sec-timbang" style="display:none;"></div>
+
+    <!-- Catatan -->
+    <div class="catatan-area" id="catatanArea">
+      <div class="catatan-label">📝 Catatan</div>
+      <textarea class="catatan-input" id="catatanInput" placeholder="Catatan tambahan (opsional)..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer" id="footer">
+  <div class="footer-inner" id="footerInner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="closeLightbox">✕ Tutup</button>
+  <img id="lightboxImg" src="" alt="foto"/>
+</div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+                           from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, serverTimestamp }
+                           from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL }
+                           from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBK8eNz6lYGT9dI5b01sCPdRFHBU8_i_40",
+  authDomain:"gudang-cibitung.firebaseapp.com",
+  projectId:"gudang-cibitung",
+  storageBucket:"gudang-cibitung.firebasestorage.app",
+  messagingSenderId:"570827859176",
+  appId:"1:570827859176:web:ccefaeeb0b964bd39dd55d"
+};
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+// ── ITEM DEFINITIONS ──────────────────────────────────────────
+// frekuensi: 'daily'=Senin-Jumat, 'mrf'=Senin/Rabu/Jumat, 'tk'=Selasa/Kamis
+const STORAGE_ITEMS = [
+  {no:1, freq:'daily', area:'Lift Baku & Katrol', objek:'Lantai dan Dinding', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:2, freq:'daily', area:'Area Depan Lift', objek:'Lantai, Floor Drain, Pedestal', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:3, freq:'daily', area:'Area Serah Terima', objek:'Lantai, Floor Drain, Pedestal', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:4, freq:'daily', area:'Area Koridor Timbang', objek:'Lantai, Floor Drain, Pedestal', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:5, freq:'daily', area:'Janitor Ruang Timbang', objek:'Lantai, Floor Drain', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:6, freq:'mrf', area:'Area Persiapan Utuh', objek:'Lantai, Floor Drain', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:7, freq:'mrf', area:'Storage Lantai Dasar', objek:'Lantai, Floor Drain, Pedestal', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:8, freq:'tk', area:'Storage Flavor', objek:'Lantai', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:9, freq:'tk', area:'Storage K2-K3', objek:'Lantai', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:10, freq:'tk', area:'Storage Lorong L1', objek:'Lantai, Floor Drain, Pedestal', metode:'PEL', param:'Lantai bersih tidak ada kotoran/deposit', photo:true},
+  {no:11, freq:'daily', area:'Cuci Pallet', objek:'Pallet Plastic & Ruang Cuci Pallet', metode:'WET', param:'Cuci pallet setiap selesai proses, bersihkan ruangan', photo:true},
+  {no:12, freq:'daily', area:'All Area', objek:'Sarang Laba-laba di area Plafon', metode:'DRY', param:'Langit-langit bersih, tidak ada sarang laba-laba', photo:false},
+];
+
+const TIMBANG_ITEMS = [
+  {no:1, area:'Timbang Baku Mayor', note:'(Akhir Proses)', sub:[
+    {id:'lantai', objek:'Lantai', metode:'PEL', photo:true},
+    {id:'gayung', objek:'Gayung', metode:'WET', photo:false},
+    {id:'sekop', objek:'Sekop / Sendok', metode:'WET', photo:false},
+    {id:'sendok', objek:'Sendok', metode:'WET', photo:false},
+    {id:'timbangan', objek:'Timbangan', metode:'LAP', photo:false},
+    {id:'ember', objek:'Ember', metode:'LAP', photo:true},
+    {id:'gunting', objek:'Gunting', metode:'WET', photo:false},
+    {id:'komputer', objek:'Rak Komputer / Komputer', metode:'LAP', photo:false},
+    {id:'rakgayung', objek:'Rak Gayung', metode:'LAP', photo:false},
+  ]},
+  {no:2, area:'Timbang Baku Minor', note:'(Akhir Proses)', sub:[
+    {id:'lantai', objek:'Lantai', metode:'PEL', photo:true},
+    {id:'gayung', objek:'Gayung', metode:'WET', photo:false},
+    {id:'sekop', objek:'Sekop / Sendok', metode:'WET', photo:false},
+    {id:'sendok', objek:'Sendok', metode:'WET', photo:false},
+    {id:'timbangan', objek:'Timbangan', metode:'LAP', photo:false},
+    {id:'ember', objek:'Ember', metode:'LAP', photo:true},
+    {id:'gunting', objek:'Gunting', metode:'WET', photo:false},
+    {id:'komputer', objek:'Rak Komputer / Komputer', metode:'LAP', photo:false},
+    {id:'rakgayung', objek:'Rak Gayung', metode:'LAP', photo:false},
+  ]},
+  {no:3, area:'Timbang Premix', note:'(Akhir Proses)', sub:[
+    {id:'lantai', objek:'Lantai', metode:'PEL', photo:true},
+    {id:'timbangan', objek:'Timbangan', metode:'LAP', photo:false},
+    {id:'komputer', objek:'Rak Komputer / Komputer', metode:'LAP', photo:false},
+  ]},
+  {no:4, area:'Timbang Alergen', note:'(Akhir Proses)', sub:[
+    {id:'lantai', objek:'Lantai', metode:'PEL', photo:true},
+    {id:'gayung', objek:'Gayung', metode:'WET', photo:false},
+    {id:'sekop', objek:'Sekop / Sendok', metode:'WET', photo:false},
+    {id:'sendok', objek:'Sendok', metode:'WET', photo:false},
+    {id:'timbangan', objek:'Timbangan', metode:'LAP', photo:false},
+    {id:'komputer', objek:'Rak Komputer / Komputer', metode:'LAP', photo:false},
+    {id:'troley', objek:'Troley Peralatan', metode:'LAP', photo:false},
+    {id:'ember', objek:'Ember', metode:'LAP', photo:true},
+    {id:'gunting', objek:'Gunting', metode:'WET', photo:false},
+  ]},
+  {no:5, area:'Gilling Gula', note:'(Akhir Proses)', sub:[
+    {id:'lantai', objek:'Lantai', metode:'PEL', photo:true},
+    {id:'gayung', objek:'Gayung', metode:'WET', photo:false},
+    {id:'timbangan', objek:'Timbangan', metode:'LAP', photo:false},
+    {id:'troley', objek:'Troley Peralatan', metode:'LAP', photo:false},
+    {id:'tangga', objek:'Tangga', metode:'PEL', photo:false},
+    {id:'mesin', objek:'Body Mesin (Sack tipping, Miller, Outlet)', metode:'LAP', photo:false},
+  ]},
+];
+
+// Frequency check
+const DAY_FREQ = {
+  daily: [0,1,2,3,4],
+  mrf:   [0,2,4],
+  tk:    [1,3],
+};
+function isActiveToday(freq, dayIdx) {
+  return DAY_FREQ[freq]?.includes(dayIdx) ?? true;
+}
+
+// ── STATE ─────────────────────────────────────────────────────
+let currentUser = null;
+let currentDayIdx = null;
+let currentSec = 'storage';
+let weekDates = [];
+let recordData = {}; // {dayKey: {docId, data}}
+let hasChanges = false;
+
+// ── AUTH ─────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  const snap = await getDoc(doc(db,'users', user.uid));
+  if (!snap.exists()) { window.location.href = 'index.html'; return; }
+  currentUser = { uid: user.uid, ...snap.data() };
+  initWeek();
+  await loadAllRecords();
+  buildDayTabs();
+  const todayIdx = getTodayIdx();
+  selectDay(todayIdx >= 0 ? todayIdx : 0);
+  document.getElementById('loadingWrap').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+});
+
+// ── WEEK INIT ─────────────────────────────────────────────────
+function initWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  weekDates = Array.from({length:5}, (_,i) => {
+    const d = new Date(mon); d.setDate(mon.getDate() + i);
+    return d;
+  });
+}
+
+function dayKey(idx) {
+  return weekDates[idx]?.toISOString().split('T')[0] || '';
+}
+
+function getTodayIdx() {
+  const t = new Date().toISOString().split('T')[0];
+  return weekDates.findIndex(d => d.toISOString().split('T')[0] === t);
+}
+
+// ── LOAD RECORDS ──────────────────────────────────────────────
+async function loadAllRecords() {
+  const wk = weekDates[0]?.toISOString().split('T')[0]?.substring(0,7);
+  if (!wk) return;
+  try {
+    const snap = await getDocs(query(
+      collection(db,'cbb_records'),
+      where('weekMonth','==',wk)
+    ));
+    snap.forEach(d => {
+      const data = d.data();
+      recordData[data.tanggal] = { docId: d.id, data };
+    });
+  } catch(e) { console.error(e); }
+}
+
+// ── DAY TABS ─────────────────────────────────────────────────
+const DAY_NAMES = ['Senin','Selasa','Rabu','Kamis','Jumat'];
+function buildDayTabs() {
+  const todayIdx = getTodayIdx();
+  document.getElementById('dayTabs').innerHTML = DAY_NAMES.map((name, i) => {
+    const rec = recordData[dayKey(i)];
+    const isDone = rec?.data?.status === 'submitted' || rec?.data?.status === 'verified';
+    const hasData = !!rec;
+    return `<button class="day-tab ${i===todayIdx?'today':''} ${hasData?'has-data':''} ${isDone?'done-all':''}" data-idx="${i}">
+      <span class="day-date">${weekDates[i]?.getDate()}</span>${name}
+    </button>`;
+  }).join('');
+  document.querySelectorAll('.day-tab').forEach(btn => {
+    btn.addEventListener('click', () => selectDay(parseInt(btn.dataset.idx)));
+  });
+}
+
+// ── SELECT DAY ────────────────────────────────────────────────
+function selectDay(idx) {
+  currentDayIdx = idx;
+  document.querySelectorAll('.day-tab').forEach((b,i) => b.classList.toggle('active', i===idx));
+  renderDay();
+}
+
+function renderDay() {
+  const idx = currentDayIdx;
+  const key = dayKey(idx);
+  const rec = recordData[key];
+  const role = currentUser?.role;
+  const status = rec?.data?.status || 'empty';
+
+  // Week info
+  document.getElementById('weekInfoName').textContent = DAY_NAMES[idx] + ', ' +
+    weekDates[idx]?.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+
+  const staffName = rec?.data?.namaStaff || '-';
+  document.getElementById('weekInfoSub').textContent =
+    rec ? `Diisi oleh: ${staffName}` : 'Belum diisi hari ini';
+
+  // Status badge
+  const sb = document.getElementById('statusBadge');
+  const statusMap = {
+    empty:     ['Belum Diisi','sb-empty'],
+    draft:     ['Draft','sb-draft'],
+    submitted: ['Menunggu Verifikasi','sb-submitted'],
+    verified:  ['Terverifikasi ✓','sb-verified'],
+  };
+  const [label, cls] = statusMap[status] || statusMap.empty;
+  sb.textContent = label;
+  sb.className = 'status-badge ' + cls;
+
+  // Catatan
+  const catatanInput = document.getElementById('catatanInput');
+  catatanInput.value = rec?.data?.catatan || '';
+  catatanInput.disabled = status === 'submitted' || status === 'verified' || role === 'penyelia';
+
+  // Render sections
+  renderStorage(idx, rec?.data, role, status);
+  renderTimbang(idx, rec?.data, role, status);
+  updateProgress();
+  renderFooter(role, status);
+}
+
+// ── RENDER STORAGE ────────────────────────────────────────────
+function renderStorage(dayIdx, recData, role, status) {
+  const canEdit = role === 'penata' && status !== 'submitted' && status !== 'verified';
+  const container = document.getElementById('sec-storage');
+
+  container.innerHTML = STORAGE_ITEMS.map(item => {
+    const active = isActiveToday(item.freq, dayIdx);
+    const saved  = recData?.storage?.[item.no] || {};
+    const isDone = saved.done || false;
+    const photoUrl = saved.photoUrl || null;
+    const freqLabel = item.freq === 'daily' ? 'Setiap Hari' : item.freq === 'mrf' ? 'Sen/Rab/Jum' : 'Sel/Kam';
+    const metodeCls = {PEL:'b-pel',WET:'b-wet',DRY:'b-dry',LAP:'b-lap'}[item.metode]||'b-lap';
+
+    return `
+      <div class="item-card ${isDone&&active?'checked':''} ${!active?'na':''}" id="sc-${item.no}">
+        <div class="item-header">
+          <div class="item-no">${item.no}</div>
+          <div class="item-info">
+            <div class="item-area">${item.area}</div>
+            <div class="item-objek">${item.objek}</div>
+            <div class="item-badges">
+              <span class="badge-metode ${metodeCls}">${item.metode}</span>
+              <span class="badge-freq">${freqLabel}</span>
+              ${!active ? '<span class="item-na-label">· Tidak dijadwalkan hari ini</span>' : ''}
+            </div>
+          </div>
+          <div class="item-check-col">
+            <div class="big-check ${isDone&&active?'on':''} ${!active||!canEdit?'disabled':''}"
+              data-no="${item.no}" data-type="storage"
+              ${!active||!canEdit?'':''}>
+              ${isDone&&active?'✅':''}
+            </div>
+          </div>
+        </div>
+        ${item.photo && active ? `
+          <div class="item-photo-row">
+            ${photoUrl
+              ? `<img class="photo-thumb" src="${photoUrl}" data-url="${photoUrl}"/>
+                 ${canEdit?`<button class="photo-remove" data-no="${item.no}" data-type="storage">✕</button>`:''}
+                 <span style="font-size:11px;color:var(--muted);">Foto kondisi kotor</span>`
+              : canEdit
+                ? `<button class="btn-photo" data-no="${item.no}" data-type="storage">📷 Foto (kotor)</button>
+                   <input type="file" accept="image/*" capture="environment" class="photo-input" id="ph-s-${item.no}"/>`
+                : `<span style="font-size:11px;color:var(--muted);">Tidak ada foto</span>`
+            }
+          </div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Checkbox events
+  container.querySelectorAll('.big-check:not(.disabled)').forEach(el => {
+    el.addEventListener('click', () => {
+      const no = parseInt(el.dataset.no);
+      const rec = getCurrentRec();
+      if (!rec.storage) rec.storage = {};
+      if (!rec.storage[no]) rec.storage[no] = {};
+      rec.storage[no].done = !rec.storage[no].done;
+      hasChanges = true;
+      renderStorage(currentDayIdx, rec, role, status);
+      updateProgress();
+    });
+  });
+
+  // Photo button events
+  container.querySelectorAll('.btn-photo').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(`ph-s-${btn.dataset.no}`);
+      if (input) input.click();
+    });
+  });
+
+  // Photo input change
+  container.querySelectorAll('.photo-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const no  = parseInt(input.id.replace('ph-s-',''));
+      const file = input.files[0];
+      if (!file) return;
+      await uploadPhoto(file, 'storage', no, null);
+    });
+  });
+
+  // Photo remove
+  container.querySelectorAll('.photo-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const no = parseInt(btn.dataset.no);
+      const rec = getCurrentRec();
+      if (rec.storage?.[no]) rec.storage[no].photoUrl = null;
+      hasChanges = true;
+      renderStorage(currentDayIdx, rec, role, status);
+    });
+  });
+
+  // Photo thumb lightbox
+  container.querySelectorAll('.photo-thumb').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.dataset.url));
+  });
+}
+
+// ── RENDER TIMBANG ────────────────────────────────────────────
+function renderTimbang(dayIdx, recData, role, status) {
+  const canEdit = role === 'penata' && status !== 'submitted' && status !== 'verified';
+  const container = document.getElementById('sec-timbang');
+
+  container.innerHTML = TIMBANG_ITEMS.map(area => {
+    const areaData = recData?.timbang?.[area.no] || {};
+    const allDone  = area.sub.every(s => areaData[s.id]?.done);
+
+    const subHtml = area.sub.map(sub => {
+      const subData = areaData[sub.id] || {};
+      const isDone  = subData.done || false;
+      const photoUrl = subData.photoUrl || null;
+      const metodeCls = {PEL:'b-pel',WET:'b-wet',DRY:'b-dry',LAP:'b-lap'}[sub.metode]||'b-lap';
+
+      return `
+        <div class="sub-item">
+          <div class="sub-check ${isDone?'on':''} ${!canEdit?'disabled':''}"
+            data-area="${area.no}" data-sub="${sub.id}" data-type="timbang">
+            ${isDone?'✓':''}
+          </div>
+          <div class="sub-info">
+            <div class="sub-objek">${sub.objek} <span class="badge-metode ${metodeCls}" style="font-size:8px;">${sub.metode}</span></div>
+          </div>
+          ${sub.photo && canEdit ? `
+            <button class="sub-photo-btn" data-area="${area.no}" data-sub="${sub.id}" title="Foto kondisi kotor">📷</button>
+            <input type="file" accept="image/*" capture="environment" class="photo-input" id="ph-t-${area.no}-${sub.id}"/>
+          ` : ''}
+          ${sub.photo && photoUrl ? `<img class="sub-photo-thumb" src="${photoUrl}" data-url="${photoUrl}" style="cursor:pointer;"/>` : ''}
+        </div>
+        ${sub.photo && photoUrl ? `
+          <div class="sub-photo-wrap">
+            ${canEdit?`<button class="photo-remove" data-area="${area.no}" data-sub="${sub.id}" data-type="timbang" style="width:20px;height:20px;font-size:10px;">✕</button>`:''}
+            <span style="font-size:10px;color:var(--muted);">Foto kondisi kotor</span>
+          </div>` : ''}`;
+    }).join('');
+
+    return `
+      <div class="item-card ${allDone?'checked':''}" id="tc-${area.no}">
+        <div class="item-header">
+          <div class="item-no">${area.no}</div>
+          <div class="item-info">
+            <div class="item-area">${area.area}</div>
+            <div class="item-objek" style="color:var(--muted);">${area.note}</div>
+            <div class="item-badges">
+              <span class="badge-freq">Sehari Sekali</span>
+            </div>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:${allDone?'var(--success)':'var(--muted)'};">
+            ${area.sub.filter(s => areaData[s.id]?.done).length}/${area.sub.length}
+          </div>
+        </div>
+        <div class="sub-items">${subHtml}</div>
+      </div>`;
+  }).join('');
+
+  // Sub check events
+  container.querySelectorAll('.sub-check:not(.disabled)').forEach(el => {
+    el.addEventListener('click', () => {
+      const aNo = parseInt(el.dataset.area);
+      const sid = el.dataset.sub;
+      const rec = getCurrentRec();
+      if (!rec.timbang) rec.timbang = {};
+      if (!rec.timbang[aNo]) rec.timbang[aNo] = {};
+      if (!rec.timbang[aNo][sid]) rec.timbang[aNo][sid] = {};
+      rec.timbang[aNo][sid].done = !rec.timbang[aNo][sid].done;
+      hasChanges = true;
+      renderTimbang(currentDayIdx, rec, role, status);
+      updateProgress();
+    });
+  });
+
+  // Photo buttons
+  container.querySelectorAll('.sub-photo-btn').forEach(btn => {
+    const input = document.getElementById(`ph-t-${btn.dataset.area}-${btn.dataset.sub}`);
+    if (input) btn.addEventListener('click', () => input.click());
+  });
+
+  container.querySelectorAll('#sec-timbang .photo-input').forEach(input => {
+    const [, aNo, sid] = input.id.replace('ph-t-','').match(/^(\d+)-(.+)$/) || [];
+    if (!aNo) return;
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
+      if (!file) return;
+      await uploadPhoto(file, 'timbang', parseInt(aNo), sid);
+    });
+  });
+
+  container.querySelectorAll('.photo-remove[data-type="timbang"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rec = getCurrentRec();
+      const aNo = parseInt(btn.dataset.area);
+      const sid = btn.dataset.sub;
+      if (rec.timbang?.[aNo]?.[sid]) rec.timbang[aNo][sid].photoUrl = null;
+      hasChanges = true;
+      renderTimbang(currentDayIdx, rec, role, status);
+    });
+  });
+
+  container.querySelectorAll('.sub-photo-thumb').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.dataset.url));
+  });
+}
+
+// ── CURRENT REC (mutable) ─────────────────────────────────────
+function getCurrentRec() {
+  const key = dayKey(currentDayIdx);
+  if (!recordData[key]) recordData[key] = { docId: null, data: { tanggal: key, status:'draft', storage:{}, timbang:{} } };
+  return recordData[key].data;
+}
+
+// ── PROGRESS ─────────────────────────────────────────────────
+function updateProgress() {
+  const rec = getCurrentRec();
+
+  // Storage
+  const activeStorage = STORAGE_ITEMS.filter(i => isActiveToday(i.freq, currentDayIdx));
+  const doneStorage   = activeStorage.filter(i => rec.storage?.[i.no]?.done).length;
+  document.getElementById('prog-storage').textContent = `${doneStorage}/${activeStorage.length}`;
+
+  // Timbang
+  const totalT = TIMBANG_ITEMS.reduce((sum,a) => sum+a.sub.length, 0);
+  const doneT  = TIMBANG_ITEMS.reduce((sum,a) => {
+    return sum + a.sub.filter(s => rec.timbang?.[a.no]?.[s.id]?.done).length;
+  }, 0);
+  document.getElementById('prog-timbang').textContent = `${doneT}/${totalT}`;
+}
+
+// ── FOOTER ───────────────────────────────────────────────────
+function renderFooter(role, status) {
+  const footer = document.getElementById('footer');
+  const inner  = document.getElementById('footerInner');
+
+  if (role === 'penata' && (status === 'empty' || status === 'draft')) {
+    footer.classList.add('show');
+    inner.innerHTML = `
+      <button class="btn-save" id="btnSave">💾 Simpan</button>
+      <button class="btn-submit" id="btnSubmit">SUBMIT</button>`;
+    document.getElementById('btnSave').addEventListener('click', () => saveRecord(false));
+    document.getElementById('btnSubmit').addEventListener('click', () => saveRecord(true));
+  } else if (role === 'penyelia' && status === 'submitted') {
+    footer.classList.add('show');
+    inner.innerHTML = `<button class="btn-approve" id="btnApprove">✅ VERIFIKASI CBB</button>`;
+    document.getElementById('btnApprove').addEventListener('click', verifyCBB);
+  } else {
+    footer.classList.remove('show');
+  }
+}
+
+// ── SAVE ─────────────────────────────────────────────────────
+async function saveRecord(isSubmit) {
+  const key = dayKey(currentDayIdx);
+  const rec = getCurrentRec();
+  const btn = document.getElementById(isSubmit?'btnSubmit':'btnSave');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>'; }
+
+  const newStatus = isSubmit ? 'submitted' : 'draft';
+  const docData = {
+    ...rec,
+    tanggal: key,
+    weekMonth: key.substring(0,7),
+    hariNama: DAY_NAMES[currentDayIdx],
+    status: newStatus,
+    namaStaff: currentUser.name,
+    submittedBy: currentUser.uid,
+    updatedAt: serverTimestamp(),
+    catatan: document.getElementById('catatanInput').value.trim(),
+  };
+
+  try {
+    const existing = recordData[key];
+    if (existing?.docId) {
+      await updateDoc(doc(db,'cbb_records', existing.docId), docData);
+    } else {
+      const ref = await addDoc(collection(db,'cbb_records'), { ...docData, createdAt: serverTimestamp() });
+      recordData[key] = { docId: ref.id, data: docData };
+    }
+    recordData[key] = { ...recordData[key], data: { ...docData } };
+    hasChanges = false;
+    showToast(isSubmit ? '✅ CBB berhasil disubmit!' : '💾 Draft tersimpan.', 'success');
+    buildDayTabs();
+    renderDay();
+  } catch(e) {
+    showToast('Gagal: '+e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled=false; btn.innerHTML=isSubmit?'SUBMIT':'💾 Simpan'; }
+  }
+}
+
+// ── VERIFY ───────────────────────────────────────────────────
+async function verifyCBB() {
+  const key = dayKey(currentDayIdx);
+  const existing = recordData[key];
+  if (!existing?.docId) return;
+  const btn = document.getElementById('btnApprove');
+  btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>';
+  try {
+    await updateDoc(doc(db,'cbb_records', existing.docId), {
+      status:'verified',
+      verifiedBy: currentUser.name,
+      verifiedAt: serverTimestamp(),
+    });
+    recordData[key].data.status = 'verified';
+    recordData[key].data.verifiedBy = currentUser.name;
+    showToast('✅ CBB terverifikasi!', 'success');
+    buildDayTabs();
+    renderDay();
+  } catch(e) {
+    showToast('Gagal: '+e.message, 'error');
+    btn.disabled=false; btn.innerHTML='✅ VERIFIKASI CBB';
+  }
+}
+
+// ── PHOTO UPLOAD ─────────────────────────────────────────────
+async function uploadPhoto(file, section, no, subId) {
+  const key  = dayKey(currentDayIdx);
+  const path = `cbb/${key}/${section}_${no}${subId?'_'+subId:''}_${Date.now()}`;
+  try {
+    showToast('⏳ Mengupload foto...', '');
+    const storageRef = sRef(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    const rec = getCurrentRec();
+    if (section === 'storage') {
+      if (!rec.storage[no]) rec.storage[no] = {};
+      rec.storage[no].photoUrl = url;
+      const role = currentUser?.role;
+      const status = rec.status || 'draft';
+      renderStorage(currentDayIdx, rec, role, status);
+    } else {
+      if (!rec.timbang[no]) rec.timbang[no] = {};
+      if (!rec.timbang[no][subId]) rec.timbang[no][subId] = {};
+      rec.timbang[no][subId].photoUrl = url;
+      const role = currentUser?.role;
+      const status = rec.status || 'draft';
+      renderTimbang(currentDayIdx, rec, role, status);
+    }
+    hasChanges = true;
+    showToast('✅ Foto berhasil diupload!', 'success');
+  } catch(e) {
+    showToast('Gagal upload foto: '+e.message, 'error');
+  }
+}
+
+// ── SECTION TABS ─────────────────────────────────────────────
+document.querySelectorAll('.sec-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSec = btn.dataset.sec;
+    document.querySelectorAll('.sec-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-storage').style.display = currentSec==='storage'?'block':'none';
+    document.getElementById('sec-timbang').style.display = currentSec==='timbang'?'block':'none';
+    document.getElementById('catatanArea').style.display = 'block';
+  });
+});
+
+// ── LIGHTBOX ─────────────────────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+document.getElementById('closeLightbox').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('open');
+});
+
+// ── UTILS ─────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show '+(type||'');
+  toastTimer = setTimeout(() => el.className='toast', 3000);
+}
+window.addEventListener('beforeunload', e => { if(hasChanges) e.returnValue='Ada perubahan belum disimpan!'; });
+</script>
+</body>
+</html>
