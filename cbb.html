@@ -1018,15 +1018,20 @@ async function uploadPhoto(file, section, no, subId) {
     showToast('⚠️ Maksimal 15 foto per hari sudah tercapai.', 'error');
     return;
   }
-  const key  = dayKey(currentDayIdx);
+  
+  const key = dayKey(currentDayIdx);
   const path = `cbb/${key}/${section}_${no}${subId?'_'+subId:''}_${Date.now()}`;
+  
   try {
     showToast('⏳ Mengupload foto...', '');
     const storageRef = sRef(storage, path);
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
+    
+    // Update memori lokal
     const role = currentUser?.role;
     const status = rec.status || 'draft';
+    
     if (section === 'storage') {
       if (!rec.storage[no]) rec.storage[no] = {};
       if (!rec.storage[no].photos) rec.storage[no].photos = [];
@@ -1039,12 +1044,18 @@ async function uploadPhoto(file, section, no, subId) {
       rec.timbang[no][subId].photos.push(url);
       renderTimbang(currentDayIdx, rec, role, status);
     }
+
+    // Auto-save biar data permanen di Firebase
+    await saveRecord(false); 
+
     hasChanges = true;
-    showToast('✅ Foto berhasil diupload! ('+countTotalPhotos(rec)+'/15)', 'success');
+    showToast('✅ Foto berhasil diupload!', 'success');
   } catch(e) {
-    showToast('Gagal upload foto: '+e.message, 'error');
+    console.error("DETAIL ERROR:", e);
+    showToast('Gagal upload: ' + e.message, 'error');
   }
 }
+
 
 // ── SECTION TABS ─────────────────────────────────────────────
 document.querySelectorAll('.sec-tab').forEach(btn => {
