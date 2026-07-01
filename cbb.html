@@ -796,14 +796,23 @@ function renderFooter(role, status) {
 async function saveRecord(isSubmit) {
   const key = dayKey(currentDayIdx);
   const rec = getCurrentRec();
-  const btn = document.getElementById(isSubmit?'btnSubmit':'btnSave');
-  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>'; }
+  const btn = document.getElementById(isSubmit ? 'btnSubmit' : 'btnSave');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>'; }
 
   const newStatus = isSubmit ? 'submitted' : 'draft';
+
+  // 🔥 PERBAIKAN BUG LINTAS BULAN (Hitung bulan dari hari Senin)
+  let dateObj = new Date(key);
+  let day = dateObj.getDay() || 7; // Ubah Minggu(0) jadi 7
+  dateObj.setDate(dateObj.getDate() - day + 1); // Mundur ke hari Senin
+  let mondayYYYY = dateObj.getFullYear();
+  let mondayMM = String(dateObj.getMonth() + 1).padStart(2, '0');
+  let fixedWeekMonth = `${mondayYYYY}-${mondayMM}`; // Hasilnya bakal seragam 1 minggu penuh!
+
   const docData = {
     ...rec,
     tanggal: key,
-    weekMonth: key.substring(0,7),
+    weekMonth: fixedWeekMonth, // <--- Kunci rahasianya di sini!
     hariNama: DAY_NAMES[currentDayIdx],
     status: newStatus,
     namaStaff: currentUser.name,
@@ -815,9 +824,9 @@ async function saveRecord(isSubmit) {
   try {
     const existing = recordData[key];
     if (existing?.docId) {
-      await updateDoc(doc(db,'cbb_records', existing.docId), docData);
+      await updateDoc(doc(db, 'cbb_records', existing.docId), docData);
     } else {
-      const ref = await addDoc(collection(db,'cbb_records'), { ...docData, createdAt: serverTimestamp() });
+      const ref = await addDoc(collection(db, 'cbb_records'), { ...docData, createdAt: serverTimestamp() });
       recordData[key] = { docId: ref.id, data: docData };
     }
     recordData[key] = { ...recordData[key], data: { ...docData } };
@@ -826,9 +835,9 @@ async function saveRecord(isSubmit) {
     buildDayTabs();
     renderDay();
   } catch(e) {
-    showToast('Gagal: '+e.message, 'error');
+    showToast('Gagal: ' + e.message, 'error');
   } finally {
-    if (btn) { btn.disabled=false; btn.innerHTML=isSubmit?'SUBMIT':'💾 Simpan'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = isSubmit ? 'SUBMIT' : '💾 Simpan'; }
   }
 }
 
@@ -962,8 +971,30 @@ function exportDayPDF() {
       <span>CBB · ${DAY_NAMES[idx]} ${key}</span>
     </div>
   `;
-  setTimeout(() => window.print(), 200);
-}
+    // ── LOGIKA TUNGGU FOTO SELESAI LOAD ──
+  const images = document.getElementById('printArea').querySelectorAll('img');
+  let loadedCount = 0;
+
+  if (images.length === 0) {
+    // Kalau hari itu ga ada foto sama sekali, langsung print
+    setTimeout(() => window.print(), 300); 
+  } else {
+    // Kalau ada foto, tunggu sampai gambarnya beres ke-download
+    images.forEach(img => {
+      img.onload = checkDone;
+      img.onerror = checkDone; // Kalau ada 1 foto gagal, tetep lanjut biar ga nyangkut
+    });
+
+    function checkDone() {
+      loadedCount++;
+      if (loadedCount === images.length) {
+        // Kalau semua foto udah muncul di layar, baru panggil Print!
+        setTimeout(() => window.print(), 400); 
+      }
+    }
+  }
+} // <--- Penutup fungsi exportPDF/printData
+  
 
 // ── PHOTO COUNT HELPER ───────────────────────────────────────
 function countTotalPhotos(recData) {
